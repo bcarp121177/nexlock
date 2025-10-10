@@ -561,7 +561,7 @@ DEPENDENCIES
   rqrcode (~> 3.0)
   rubocop-rails-omakase
   ruby-oembed (~> 0.18.0)
-  selenium-webdriver (>= 4.20.1, < 4.36.0)
+  selenium-webdriver (>= 4.20.1)
   solid_cable
   solid_cache
   solid_queue
