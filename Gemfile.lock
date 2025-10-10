@@ -1,16 +1,4 @@
 GIT
-  remote: https://github.com/excid3/devise.git
-  revision: 871c1b7cf6a0cc24b5f8fd5bc165d9c261a6da23
-  branch: sign-in-after-reset-password-proc
-  specs:
-    devise (4.9.3)
-      bcrypt (~> 3.0)
-      orm_adapter (~> 0.1)
-      railties (>= 6.0.0)
-      responders
-      warden (~> 1.2.3)
-
-GIT
   remote: https://github.com/excid3/jbuilder.git
   revision: b9285506407ea9dd703112162b35fb7e08425bc4
   branch: fix-caching-with-api-controllers
@@ -146,6 +134,12 @@ GEM
     debug (1.11.0)
       irb (~> 1.10)
       reline (>= 0.3.8)
+    devise (4.9.4)
+      bcrypt (~> 3.0)
+      orm_adapter (~> 0.1)
+      railties (>= 4.1.0)
+      responders
+      warden (~> 1.2.3)
     devise-i18n (1.15.0)
       devise (>= 4.9.0)
       rails-i18n
@@ -204,7 +198,7 @@ GEM
       pp (>= 0.6.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
-    json (2.15.1)
+    json (2.13.2)
     kamal (2.7.0)
       activesupport (>= 7.0)
       base64 (~> 0.2)
@@ -536,7 +530,7 @@ DEPENDENCIES
   bundler-audit
   capybara (>= 3.39)
   debug
-  devise!
+  devise (~> 4.9.0)
   devise-i18n (~> 1.10)
   erb_lint
   hotwire_combobox (~> 0.3)
@@ -567,7 +561,7 @@ DEPENDENCIES
   rqrcode (~> 3.0)
   rubocop-rails-omakase
   ruby-oembed (~> 0.18.0)
-  selenium-webdriver (>= 4.20.1)
+  selenium-webdriver (>= 4.20.1, < 4.36.0)
   solid_cable
   solid_cache
   solid_queue
@@ -613,7 +607,7 @@ CHECKSUMS
   crass (1.0.6) sha256=dc516022a56e7b3b156099abc81b6d2b08ea1ed12676ac7a5657617f012bd45d
   date (3.4.1) sha256=bf268e14ef7158009bfeaec40b5fa3c7271906e88b196d958a89d4b408abe64f
   debug (1.11.0) sha256=1425db64cfa0130c952684e3dc974985be201dd62899bf4bbe3f8b5d6cf1aef2
-  devise (4.9.3)
+  devise (4.9.4) sha256=920042fe5e704c548aa4eb65ebdd65980b83ffae67feb32c697206bfd975a7f8
   devise-i18n (1.15.0) sha256=aff406e8a2941cd1d7614643b1619031a403b2855bb6057e391d1c7c273205cd
   dotenv (3.1.8) sha256=9e1176060ced581f8e6ce4384e91361817763a76e3c625c8bddc18b35bd392c3
   drb (2.2.3) sha256=0b00d6fdb50995fe4a45dea13663493c841112e4068656854646f418fda13373
@@ -645,7 +639,7 @@ CHECKSUMS
   io-console (0.8.1) sha256=1e15440a6b2f67b6ea496df7c474ed62c860ad11237f29b3bd187f054b925fcb
   irb (1.15.2) sha256=222f32952e278da34b58ffe45e8634bf4afc2dc7aa9da23fed67e581aa50fdba
   jbuilder (2.13.0)
-  json (2.15.1) sha256=b1c1b2e7c116eb1903e0ce0c374783e6ead8747a0f9eca132d274018ebb80b89
+  json (2.13.2) sha256=02e1f118d434c6b230a64ffa5c8dee07e3ec96244335c392eaed39e1199dbb68
   jumpstart (0.1.0)
   kamal (2.7.0) sha256=66b863d967a740886a1817f7e181849c100dfcd4bdf1d8695d9c20828313b4f8
   language_server-protocol (3.17.0.5) sha256=fd1e39a51a28bf3eec959379985a72e296e9f9acfce46f6a79d31ca8760803cc
