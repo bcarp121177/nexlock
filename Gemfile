@@ -18,7 +18,7 @@ gem "turbo-rails", "~> 2.0.3"
 # Hotwire's modest JavaScript framework [https://stimulus.hotwired.dev]
 gem "stimulus-rails", "~> 1.0", ">= 1.0.2"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
-gem "jbuilder", github: "excid3/jbuilder", branch: "fix-caching-with-api-controllers" # "~> 2.12"
+gem "jbuilder", "~> 2.14"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"

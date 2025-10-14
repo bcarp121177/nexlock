@@ -1,12 +1,3 @@
-GIT
-  remote: https://github.com/excid3/jbuilder.git
-  revision: b9285506407ea9dd703112162b35fb7e08425bc4
-  branch: fix-caching-with-api-controllers
-  specs:
-    jbuilder (2.13.0)
-      actionview (>= 5.0.0)
-      activesupport (>= 5.0.0)
-
 PATH
   remote: lib/jumpstart
   specs:
@@ -198,6 +189,9 @@ GEM
       pp (>= 0.6.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
+    jbuilder (2.14.1)
+      actionview (>= 7.0.0)
+      activesupport (>= 7.0.0)
     json (2.13.2)
     kamal (2.7.0)
       activesupport (>= 7.0)
@@ -538,7 +532,7 @@ DEPENDENCIES
   importmap-rails
   inline_svg (~> 1.6)
   invisible_captcha (~> 2.0)
-  jbuilder!
+  jbuilder (~> 2.14)
   jumpstart!
   kamal (>= 2.0.0.rc2)
   local_time (~> 3.0)
@@ -638,7 +632,7 @@ CHECKSUMS
   invisible_captcha (2.3.0) sha256=309ee5a5e891ecfb732c85b12f1aa9252a648df6f2761b3b41205e824e30ff15
   io-console (0.8.1) sha256=1e15440a6b2f67b6ea496df7c474ed62c860ad11237f29b3bd187f054b925fcb
   irb (1.15.2) sha256=222f32952e278da34b58ffe45e8634bf4afc2dc7aa9da23fed67e581aa50fdba
-  jbuilder (2.13.0)
+  jbuilder (2.14.1) sha256=4eb26376ff60ef100cb4fd6fd7533cd271f9998327e86adf20fd8c0e69fabb42
   json (2.13.2) sha256=02e1f118d434c6b230a64ffa5c8dee07e3ec96244335c392eaed39e1199dbb68
   jumpstart (0.1.0)
   kamal (2.7.0) sha256=66b863d967a740886a1817f7e181849c100dfcd4bdf1d8695d9c20828313b4f8
