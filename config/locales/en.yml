@@ -74,6 +74,7 @@ en:
     show:
       invite: "Invite A User"
       resend_invite: "Resend Invite"
+      2fa: "2FA"
       edit: "Edit"
       edit_account: "Edit Account"
       copy_link: "Copy link"
