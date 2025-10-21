@@ -1,0 +1,18 @@
+---
+application_name: Nexlock
+business_name: Nexlock, LLC
+business_address: 
+domain: nexlock.io
+support_email: brian@nexlock.io
+default_from_email: brian@nexlock.io
+background_job_processor: solid_queue
+email_provider: resend
+account_types: personal
+apns: false
+fcm: false
+integrations:
+omniauth_providers:
+payment_processors:
+- stripe
+multitenancy:
+gems:
