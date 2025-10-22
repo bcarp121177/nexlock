@@ -245,6 +245,68 @@ class TradeService
       trade.price_cents - fees[:seller_fee]
     end
 
+    # Signature workflow methods
+    def send_for_signature(trade, deadline_hours: 168)
+      return { success: false, error: "Trade cannot be sent for signature" } unless trade.may_send_for_signature?
+
+      trade.signature_deadline_at = deadline_hours.hours.from_now
+      trade.signature_sent_at = Time.current
+      trade.send_for_signature!  # State transition with callbacks
+
+      # The create_signature_document callback creates the TradeDocument
+      # Get seller's signing URL immediately for return
+      doc = trade.trade_documents.pending_status.last
+
+      unless doc
+        return { success: false, error: "Failed to create signature document" }
+      end
+
+      seller_sig = doc.document_signatures.seller_signer_role.first
+      url_result = DocusealService.get_embedded_signing_url(seller_sig.docuseal_submitter_id)
+
+      if url_result[:success]
+        { success: true, trade: trade, signing_url: url_result[:url], slug: url_result[:slug] }
+      else
+        { success: false, error: url_result[:error] }
+      end
+    rescue => e
+      Rails.logger.error "Error sending for signature: #{e.message}"
+      { success: false, error: e.message }
+    end
+
+    def cancel_signature_request(trade)
+      return { success: false, error: "Cannot cancel" } unless trade.may_cancel_signature_request?
+
+      trade.cancel_signature_request!  # State transition handles cleanup
+      { success: true, message: "Signature request cancelled" }
+    rescue => e
+      Rails.logger.error "Error cancelling signature: #{e.message}"
+      { success: false, error: e.message }
+    end
+
+    def get_signing_url(trade, user)
+      doc = trade.trade_documents.pending_status.last
+      return { signed: false, error: "No pending document" } unless doc
+
+      # Determine user's role
+      role = (user.id == trade.seller_id) ? "seller" : "buyer"
+      signature = doc.document_signatures.public_send("#{role}_signer_role").first
+
+      return { signed: false, error: "Signature record not found" } unless signature
+      return { signed: true, message: "You have already signed" } if signature.signed_at.present?
+
+      result = DocusealService.get_embedded_signing_url(signature.docuseal_submitter_id)
+
+      if result[:success]
+        { signed: false, slug: result[:slug], url: result[:url] }
+      else
+        { signed: false, error: result[:error] }
+      end
+    rescue => e
+      Rails.logger.error "Error getting signing URL: #{e.message}"
+      { signed: false, error: e.message }
+    end
+
     private
 
     def party?(trade, user)

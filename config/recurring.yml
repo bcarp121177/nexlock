@@ -1,3 +1,15 @@
+production:
+  signature_deadline_check:
+    class: SignatureDeadlineCheckJob
+    queue: default
+    schedule: every hour
+
+development:
+  signature_deadline_check:
+    class: SignatureDeadlineCheckJob
+    queue: default
+    schedule: every hour
+
 # production:
 #   periodic_cleanup:
 #     class: CleanSoftDeletedRecordsJob

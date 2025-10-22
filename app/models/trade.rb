@@ -47,6 +47,7 @@ class Trade < ApplicationRecord
   has_many :evidences, dependent: :destroy
 
   has_many_attached :media
+  has_one_attached :signed_agreement
 
   accepts_nested_attributes_for :item
 
@@ -325,7 +326,7 @@ class Trade < ApplicationRecord
   end
 
   def cancel_signature_process
-    trade_document = trade_documents.trade_agreement.where.not(status: [:completed, :cancelled]).last
+    trade_document = trade_documents.trade_agreement_document_type.where.not(status: [:completed, :expired]).last
     if trade_document
       trade_document.update!(status: :expired)
     end
@@ -338,9 +339,9 @@ class Trade < ApplicationRecord
   end
 
   def cancel_docuseal_submission
-    trade_document = trade_documents.trade_agreement.where.not(status: [:completed, :cancelled]).last
+    trade_document = trade_documents.trade_agreement_document_type.where.not(status: [:completed, :expired]).last
     if trade_document
-      trade_document.update!(status: :cancelled)
+      trade_document.update!(status: :expired)
     end
     Rails.logger.info "DocuSeal submission cancelled for trade #{id}"
   end
@@ -496,5 +497,28 @@ class Trade < ApplicationRecord
       to_state: state,
       metadata: { timestamp: Time.current }
     )
+  end
+
+  # Signature workflow helper methods
+  def signed_agreement_url
+    signed_agreement.attached? ? signed_agreement.url : trade_documents.completed_status.trade_agreement_document_type.last&.signed_document_url
+  end
+
+  def signature_progress
+    doc = trade_documents.pending_status.last || trade_documents.completed_status.last
+    return { seller: false, buyer: false } unless doc
+
+    {
+      seller: doc.document_signatures.seller_signer_role.first&.signed_at.present?,
+      buyer: doc.document_signatures.buyer_signer_role.first&.signed_at.present?
+    }
+  end
+
+  def can_download_agreement?
+    signed_agreement_url.present? && (awaiting_funding? || funded? || shipped? || delivered_pending_confirmation? || inspection? || accepted?)
+  end
+
+  def active_signature_document
+    trade_documents.pending_status.trade_agreement_document_type.last
   end
 end

@@ -4,7 +4,7 @@ class TradesController < ApplicationController
   before_action :authenticate_user!
   before_action :ensure_account
   before_action :set_trades_scope, only: [:index]
-  before_action :set_trade, only: [:show, :attach_media, :send_to_buyer, :agree, :ship, :mark_delivered, :confirm_receipt, :accept, :reject]
+  before_action :set_trade, only: [:show, :attach_media, :send_to_buyer, :agree, :ship, :mark_delivered, :confirm_receipt, :accept, :reject, :send_for_signature, :cancel_signature_request, :retry_signature, :signing_url]
 
   def index
     @pagy, @trades = pagy(@trades_scope.ordered, limit: 25)
@@ -22,7 +22,7 @@ class TradesController < ApplicationController
 
     assign_form_attributes
 
-    p rice_cents = parse_price_to_cents(@price_input)
+    price_cents = parse_price_to_cents(@price_input)
 
     if price_cents.nil?
       render :new, status: :unprocessable_content
@@ -175,6 +175,56 @@ class TradesController < ApplicationController
     else
       redirect_to trade_path(@trade), alert: result[:error]
     end
+  end
+
+  # Signature workflow actions
+  def send_for_signature
+    unless current_user == @trade.seller
+      redirect_to trade_path(@trade), alert: t("trades.actions.errors.seller_only", default: "Only the seller can send for signature")
+      return
+    end
+
+    result = TradeService.send_for_signature(@trade)
+
+    if result[:success]
+      redirect_to trade_path(@trade), notice: t("trades.signature.sent", default: "Trade sent for signature")
+    else
+      redirect_to trade_path(@trade), alert: result[:error]
+    end
+  end
+
+  def cancel_signature_request
+    unless current_user == @trade.seller
+      redirect_to trade_path(@trade), alert: t("trades.actions.errors.seller_only", default: "Only the seller can cancel signature requests")
+      return
+    end
+
+    result = TradeService.cancel_signature_request(@trade)
+
+    if result[:success]
+      redirect_to trade_path(@trade), notice: result[:message]
+    else
+      redirect_to trade_path(@trade), alert: result[:error]
+    end
+  end
+
+  def retry_signature
+    unless current_user == @trade.seller
+      redirect_to trade_path(@trade), alert: t("trades.actions.errors.seller_only", default: "Only the seller can retry signature")
+      return
+    end
+
+    if @trade.may_restart_signature_process?
+      @trade.restart_signature_process!
+      redirect_to trade_path(@trade), notice: t("trades.signature.retried", default: "Trade returned to draft. You can now send for signature again.")
+    else
+      redirect_to trade_path(@trade), alert: t("trades.signature.cannot_retry", default: "Cannot retry signature")
+    end
+  end
+
+  def signing_url
+    result = TradeService.get_signing_url(@trade, current_user)
+    render json: result
   end
 
   private

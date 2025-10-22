@@ -58,7 +58,7 @@
                   <%= l(trade.updated_at, format: :short) %>
                 </td>
                 <td class="px-6 py-4 text-right">
-                  <%= link_to t("trades.index.table.view", default: "View"), "#", class: "text-sm font-medium text-app-accent hover:underline" %>
+                  <%= link_to t("trades.index.table.view", default: "View"), trade_path(trade), class: "text-sm font-medium text-app-accent hover:underline" %>
                 </td>
               </tr>
             <% end %>

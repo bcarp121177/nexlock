@@ -80,13 +80,12 @@
             <p class="text-xs uppercase tracking-wide text-app-muted"><%= t("trades.show.labels.created", default: "Created") %></p>
             <p class="mt-1 text-app-strong font-medium"><%= l(@trade.created_at, format: :long) %></p>
           </div>
-          <%# TODO: Add signed_agreement_url attribute/method to Trade model %>
-          <%# if @trade.signed_agreement_url.present? %>
-            <%# <div> %>
-              <%# <p class="text-xs uppercase tracking-wide text-app-muted"><%= t("trades.show.labels.agreement", default: "Signed agreement") %>
-              <%#= link_to t("trades.show.actions.view_agreement", default: "View PDF"), @trade.signed_agreement_url, target: "_blank", rel: "noopener", class: "mt-1 inline-flex text-sm text-app-accent hover:underline" %>
-            <%# </div> %>
-          <%# end %>
+          <% if @trade.signed_agreement.attached? %>
+            <div>
+              <p class="text-xs uppercase tracking-wide text-app-muted"><%= t("trades.show.labels.agreement", default: "Signed agreement") %></p>
+              <%= link_to t("trades.show.actions.view_agreement", default: "View PDF"), @trade.signed_agreement_url, target: "_blank", rel: "noopener", class: "mt-1 inline-flex text-sm text-app-accent hover:underline" %>
+            </div>
+          <% end %>
         </div>
       <% end %>
 
@@ -209,15 +208,40 @@
         <% when "draft" %>
           <% if @is_seller %>
             <p class="text-sm text-app-muted mb-4">
-              <% if @invitation_sent %>
-                <%= t("trades.show.next_steps.sent", default: "You sent the trade to the buyer. Waiting for their agreement.") %>
-              <% else %>
-                <%= t("trades.show.next_steps.ready_to_send", default: "Review the details and invite the buyer to agree to the terms.") %>
-              <% end %>
+              <%= t("trades.show.next_steps.ready_to_send", default: "Choose how to proceed with this trade.") %>
             </p>
-            <% unless @invitation_sent %>
-              <%= button_to t("trades.show.actions.send_to_buyer", default: "Send to Buyer"), send_to_buyer_trade_path(@trade), method: :post, class: "btn-app-primary" %>
-            <% end %>
+
+            <!-- DocuSeal Signature Workflow -->
+            <div class="space-y-3">
+              <%= button_to "🔐 Send for Digital Signature",
+                            send_for_signature_trade_path(@trade),
+                            method: :post,
+                            class: "btn-app-primary w-full",
+                            data: { turbo_confirm: "This will send the trade for legally binding digital signatures. Continue?" } %>
+              <p class="text-xs text-app-muted">Both you and the buyer will sign a legally binding agreement.</p>
+            </div>
+
+            <div class="my-4 relative">
+              <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-app-subtle"></div>
+              </div>
+              <div class="relative flex justify-center text-xs uppercase">
+                <span class="bg-app-card px-2 text-app-muted">Or</span>
+              </div>
+            </div>
+
+            <!-- Simple Agreement Workflow -->
+            <div class="space-y-3">
+              <% unless @invitation_sent %>
+                <%= button_to t("trades.show.actions.send_to_buyer", default: "Send Simple Invitation"),
+                              send_to_buyer_trade_path(@trade),
+                              method: :post,
+                              class: "btn-app-secondary w-full" %>
+                <p class="text-xs text-app-muted">Quick workflow without legal signatures.</p>
+              <% else %>
+                <p class="text-sm text-app-muted">Simple invitation sent. Waiting for buyer agreement.</p>
+              <% end %>
+            </div>
           <% elsif @is_buyer %>
             <% if @trade.buyer_agreed_at.present? %>
               <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.buyer_waiting", default: "Thanks for agreeing. Waiting for seller to proceed.") %></p>
@@ -228,6 +252,59 @@
           <% else %>
             <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.viewer", default: "Waiting for buyer and seller to agree to the draft.") %></p>
           <% end %>
+
+        <% when "awaiting_seller_signature", "awaiting_buyer_signature" %>
+          <% if (@is_seller && @trade.awaiting_seller_signature?) || (@is_buyer && @trade.awaiting_buyer_signature?) %>
+            <p class="text-sm text-app-muted mb-4">Please review and sign the trade agreement below.</p>
+            <div id="docuseal-container">
+              <%= render "trades/docuseal_signature_form", trade: @trade %>
+            </div>
+          <% else %>
+            <div class="flex items-center gap-3 p-4 bg-app-subtle rounded-lg">
+              <svg class="animate-spin h-5 w-5 text-app-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <div>
+                <p class="font-medium">Waiting for <%= @trade.awaiting_seller_signature? ? "seller" : "buyer" %> to sign</p>
+                <p class="text-sm text-app-muted">You'll be notified when it's your turn</p>
+              </div>
+            </div>
+          <% end %>
+
+          <% if @is_seller %>
+            <div class="mt-4 pt-4 border-t border-app-subtle">
+              <%= button_to "Cancel Signature Request",
+                            cancel_signature_request_trade_path(@trade),
+                            method: :post,
+                            class: "btn-app-secondary",
+                            data: { turbo_confirm: "Cancel the signature request? The trade will return to draft." } %>
+            </div>
+          <% end %>
+
+          <% if @trade.signature_deadline_at.present? %>
+            <p class="mt-4 text-xs text-app-muted">
+              Signature deadline: <%= l(@trade.signature_deadline_at, format: :long) %>
+            </p>
+          <% end %>
+
+        <% when "signature_deadline_missed" %>
+          <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <h4 class="font-medium text-red-900">Signature Deadline Missed</h4>
+            <p class="text-sm text-red-700 mt-1">The signature request expired before both parties signed.</p>
+          </div>
+
+          <% if @is_seller %>
+            <div class="mt-4">
+              <%= button_to "Retry Signature Process",
+                            retry_signature_trade_path(@trade),
+                            method: :post,
+                            class: "btn-app-primary" %>
+            </div>
+          <% else %>
+            <p class="text-sm text-app-muted mt-4">Waiting for seller to restart the signature process.</p>
+          <% end %>
+
         <% when "funded" %>
           <% if @is_seller %>
             <p class="text-sm text-app-muted mb-4"><%= t("trades.show.next_steps.ship", default: "Provide tracking details once the item ships.") %></p>
