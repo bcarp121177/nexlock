@@ -408,6 +408,16 @@ class Trade < ApplicationRecord
   end
 
   def trigger_payout
+    result = StripeService.create_payout(self)
+
+    unless result[:success]
+      Rails.logger.error "Payout failed for trade #{id}: #{result[:error]}"
+      # Don't raise - we don't want to rollback the state transition
+      # The payout can be retried manually or via admin interface
+      return
+    end
+
+    Rails.logger.info "Payout triggered for trade #{id}: #{result[:transfer].id}"
   end
 
   def close_trade
@@ -424,6 +434,7 @@ class Trade < ApplicationRecord
     end
 
     shipments.create!(
+      account: account,
       carrier: result[:shipment][:carrier],
       tracking_number: result[:shipment][:tracking_number],
       easypost_shipment_id: result[:shipment][:easypost_shipment_id],

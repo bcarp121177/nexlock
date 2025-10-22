@@ -3,12 +3,12 @@ class Payout < ApplicationRecord
   belongs_to :trade
   belongs_to :seller, class_name: "User"
 
-  enum status: {
+  enum :status, {
     pending: "pending",
     processing: "processing",
     paid: "paid",
     failed: "failed"
-  }, _suffix: true
+  }, suffix: true
 
   validates :amount_cents, :status, presence: true
 end

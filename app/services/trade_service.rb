@@ -56,6 +56,7 @@ class TradeService
       end
 
       AuditLog.create!(
+        account: trade.account,
         trade: trade,
         actor: Current.user,
         action: "invitation_sent",
@@ -74,6 +75,7 @@ class TradeService
       mark_agreed(trade, user)
 
       AuditLog.create!(
+        account: trade.account,
         trade: trade,
         actor: user,
         action: "agreed",
@@ -88,7 +90,7 @@ class TradeService
       if trade.buyer_agreed_at.present? && trade.seller_agreed_at.present?
         if trade.may_agree?
           trade.agree!
-          AuditLog.create!(trade: trade, actor: user, action: "state_change", from_state: "draft", to_state: "awaiting_funding")
+          AuditLog.create!(account: trade.account, trade: trade, actor: user, action: "state_change", from_state: "draft", to_state: "awaiting_funding")
         end
         { success: true, message: I18n.t("trades.actions.agreement.ready", default: "Both parties agreed.") }
       else
@@ -104,6 +106,7 @@ class TradeService
 
       Trade.transaction do
         shipment = trade.shipments.create!(
+          account: trade.account,
           carrier: carrier.presence || "Unknown",
           tracking_number: tracking_number,
           direction: "forward",
@@ -113,18 +116,6 @@ class TradeService
         )
 
         trade.mark_shipped!
-
-        AuditLog.create!(
-          trade: trade,
-          actor: Current.user,
-          action: "state_change",
-          from_state: "funded",
-          to_state: "shipped",
-          metadata: {
-            tracking_number: shipment.tracking_number,
-            carrier: shipment.carrier
-          }
-        )
       end
 
       { success: true, shipment: shipment }
@@ -138,6 +129,7 @@ class TradeService
       trade.mark_delivered!
 
       AuditLog.create!(
+        account: trade.account,
         trade: trade,
         actor: Current.user,
         action: "state_change",
@@ -156,6 +148,7 @@ class TradeService
       trade.confirm_receipt!
 
       AuditLog.create!(
+        account: trade.account,
         trade: trade,
         actor: Current.user,
         action: "state_change",
@@ -174,6 +167,7 @@ class TradeService
       trade.accept!
 
       AuditLog.create!(
+        account: trade.account,
         trade: trade,
         actor: Current.user,
         action: "state_change",
@@ -199,10 +193,11 @@ class TradeService
         return_shipping_paid_by: trade.determine_return_cost_responsibility(reason_category)
       )
 
-      trade.evidences.create!(user: Current.user, file_url: "text://rejection", description: reason_text)
+      trade.evidences.create!(account: trade.account, user: Current.user, file_url: "text://rejection", description: reason_text)
       trade.reject!
 
       AuditLog.create!(
+        account: trade.account,
         trade: trade,
         actor: Current.user,
         action: "state_change",

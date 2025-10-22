@@ -112,5 +112,51 @@ class StripeService
     rescue URI::InvalidURIError
       false
     end
+
+    # Create payout/transfer to seller's Connect account
+    def create_payout(trade, amount_cents: nil)
+      unless trade.seller.can_receive_payouts?
+        return { success: false, error: "Seller cannot receive payouts. KYC not complete." }
+      end
+
+      # Calculate payout amount (price minus seller's fees)
+      payout_amount = amount_cents || TradeService.calculate_payout_amount(trade)
+
+      begin
+        transfer = Stripe::Transfer.create(
+          amount: payout_amount,
+          currency: trade.currency.downcase,
+          destination: trade.seller.stripe_connect_id,
+          metadata: {
+            trade_id: trade.id,
+            seller_id: trade.seller_id,
+            buyer_id: trade.buyer_id,
+            item_name: trade.item&.name,
+            platform_fee_cents: trade.platform_fee_cents
+          },
+          description: "Payout for #{trade.item&.name || 'item'}"
+        )
+
+        # Create payout record
+        payout = trade.build_payout(
+          account: trade.account,
+          seller: trade.seller,
+          amount_cents: payout_amount,
+          provider: 'stripe',
+          status: 'pending',
+          transfer_id: transfer.id
+        )
+
+        if payout.save
+          Rails.logger.info "Payout created: #{transfer.id} for trade #{trade.id}"
+          { success: true, transfer: transfer, payout: payout }
+        else
+          { success: false, error: payout.errors.full_messages.join(", ") }
+        end
+      rescue Stripe::StripeError => e
+        Rails.logger.error "Stripe error creating payout: #{e.message}"
+        { success: false, error: e.message }
+      end
+    end
   end
 end
