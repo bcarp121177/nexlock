@@ -25,11 +25,32 @@ class User < ApplicationRecord
   validates :name, presence: true
   validates :kyc_status, inclusion: { in: %w[pending verified rejected] }
 
+  # Auto-link trades after user registration
+  after_create :link_buyer_trades
+
   def stripe_account_active?
     stripe_connect_id.present? && kyc_status == "verified"
   end
 
   def can_receive_payouts?
     stripe_account_active?
+  end
+
+  private
+
+  # Link trades where user was invited as buyer by email
+  def link_buyer_trades
+    trades = Trade.where(
+      buyer_email: email.downcase.strip,
+      buyer_id: nil
+    )
+
+    count = trades.count
+    return if count.zero?
+
+    # Update all matching trades to link to this user
+    trades.update_all(buyer_id: id)
+
+    Rails.logger.info "Linked #{count} anonymous trade(s) to user #{id} (#{email})"
   end
 end

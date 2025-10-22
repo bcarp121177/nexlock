@@ -4,7 +4,7 @@ class TradesController < ApplicationController
   before_action :authenticate_user!
   before_action :ensure_account
   before_action :set_trades_scope, only: [:index]
-  before_action :set_trade, only: [:show, :attach_media, :send_to_buyer, :agree, :ship, :mark_delivered, :confirm_receipt, :accept, :reject, :send_for_signature, :cancel_signature_request, :retry_signature, :signing_url]
+  before_action :set_trade, only: [:show, :attach_media, :send_to_buyer, :agree, :fund, :ship, :mark_delivered, :confirm_receipt, :accept, :reject, :send_for_signature, :cancel_signature_request, :retry_signature, :signing_url]
 
   def index
     @pagy, @trades = pagy(@trades_scope.ordered, limit: 25)
@@ -97,6 +97,33 @@ class TradesController < ApplicationController
 
     if result[:success]
       redirect_to trade_path(@trade), notice: result[:message]
+    else
+      redirect_to trade_path(@trade), alert: result[:error]
+    end
+  end
+
+  def fund
+    unless current_user == @trade.buyer
+      redirect_to trade_path(@trade), alert: t("trades.actions.errors.buyer_only", default: "Only the buyer can fund this trade")
+      return
+    end
+
+    unless @trade.awaiting_funding?
+      redirect_to trade_path(@trade), alert: t("trades.actions.errors.invalid_state", default: "Trade must be awaiting funding")
+      return
+    end
+
+    # Require KYC verification for buyers to prevent fraud
+    unless current_user.kyc_status == "verified"
+      redirect_to edit_user_registration_path, alert: t("trades.funding.kyc_required", default: "Please complete KYC verification before funding trades")
+      return
+    end
+
+    # Create Stripe checkout session (collects payment method during checkout)
+    result = TradeService.create_checkout_session(@trade, current_user)
+
+    if result[:success]
+      redirect_to result[:checkout_url], allow_other_host: true
     else
       redirect_to trade_path(@trade), alert: result[:error]
     end
@@ -237,7 +264,13 @@ class TradesController < ApplicationController
   end
 
   def set_trades_scope
-    @trades_scope = current_account.trades.includes(:item, :buyer, :seller)
+    # Show trades where user is buyer OR seller OR trade belongs to current account
+    @trades_scope = Trade.where(buyer_id: current_user.id)
+                         .or(Trade.where(seller_id: current_user.id))
+                         .or(Trade.where(account_id: current_account.id))
+                         .includes(:item, :buyer, :seller)
+                         .distinct
+
     @trade_counts = {
       total: @trades_scope.count,
       attention: @trades_scope.requiring_attention.count,
@@ -246,7 +279,12 @@ class TradesController < ApplicationController
   end
 
   def set_trade
-    @trade = current_account.trades.includes(:item, :buyer, :seller, :shipments, :audit_logs, media_attachments: :blob).find(params[:id])
+    # Allow access if user is buyer, seller, or trade belongs to current account
+    @trade = Trade.where(id: params[:id])
+                  .where("buyer_id = ? OR seller_id = ? OR account_id = ?",
+                         current_user.id, current_user.id, current_account.id)
+                  .includes(:item, :buyer, :seller, :shipments, :audit_logs, media_attachments: :blob)
+                  .first!
   end
 
   def assign_trade_attributes

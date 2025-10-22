@@ -307,6 +307,108 @@ class TradeService
       { signed: false, error: e.message }
     end
 
+    # Create Stripe Checkout Session for escrow funding
+    def create_checkout_session(trade, user)
+      unless trade.awaiting_funding?
+        return { success: false, error: "Trade must be awaiting funding" }
+      end
+
+      unless user.id == trade.buyer_id
+        return { success: false, error: "Only the buyer can fund this trade" }
+      end
+
+      # Check if escrow already exists and has a pending payment
+      if trade.escrow.present?
+        case trade.escrow.status
+        when 'held', 'funded'
+          return { success: false, error: "Escrow has already been funded for this trade" }
+        when 'pending'
+          # Resume existing checkout session if still valid
+          if trade.escrow.stripe_checkout_session_id.present?
+            begin
+              session = Stripe::Checkout::Session.retrieve(trade.escrow.stripe_checkout_session_id)
+              if session.status == 'open'
+                return { success: true, checkout_url: session.url }
+              end
+            rescue Stripe::StripeError => e
+              Rails.logger.warn "Could not retrieve existing checkout session: #{e.message}"
+            end
+          end
+        end
+      end
+
+      # Calculate total amount (price + platform fee if buyer pays)
+      total_amount = trade.price_cents
+      total_amount += trade.platform_fee_cents if trade.fee_split == 'buyer'
+
+      begin
+        # Create Stripe Checkout Session
+        host = ENV.fetch("APP_HOST", "localhost:3000")
+        success_url = Rails.application.routes.url_helpers.trade_url(trade, funding_success: true, host: host)
+        cancel_url = Rails.application.routes.url_helpers.trade_url(trade, funding_cancelled: true, host: host)
+
+        session = Stripe::Checkout::Session.create(
+          mode: 'payment',
+          success_url: success_url,
+          cancel_url: cancel_url,
+          customer_email: user.email,
+          line_items: [
+            {
+              price_data: {
+                currency: trade.currency.downcase,
+                product_data: {
+                  name: "Escrow Payment: #{trade.item&.name || 'Trade Item'}",
+                  description: "Protected payment held in escrow until delivery confirmed"
+                },
+                unit_amount: total_amount
+              },
+              quantity: 1
+            }
+          ],
+          payment_intent_data: {
+            metadata: {
+              trade_id: trade.id,
+              buyer_id: user.id,
+              seller_id: trade.seller_id,
+              platform_fee_cents: trade.platform_fee_cents,
+              fee_split: trade.fee_split
+            },
+            description: "Escrow for #{trade.item&.name || 'item'}",
+            capture_method: 'automatic'
+          },
+          metadata: {
+            trade_id: trade.id,
+            buyer_id: user.id
+          }
+        )
+
+        # Create or update escrow record
+        escrow = trade.escrow || trade.build_escrow
+        escrow.assign_attributes(
+          account: trade.account,
+          provider: 'stripe',
+          amount_cents: total_amount,
+          status: 'pending',
+          stripe_checkout_session_id: session.id,
+          payment_intent_id: session.payment_intent
+        )
+
+        if escrow.save
+          Rails.logger.info "Checkout session created: #{session.id} for trade #{trade.id}"
+          { success: true, checkout_url: session.url }
+        else
+          { success: false, error: escrow.errors.full_messages.join(", ") }
+        end
+      rescue Stripe::StripeError => e
+        Rails.logger.error "Stripe error creating checkout session: #{e.message}"
+        { success: false, error: "Payment setup failed: #{e.message}" }
+      end
+    rescue => e
+      Rails.logger.error "Error creating checkout session: #{e.class}: #{e.message}"
+      Rails.logger.error e.backtrace.first(15).join("\n")
+      { success: false, error: "#{e.class}: #{e.message}" }
+    end
+
     private
 
     def party?(trade, user)
@@ -319,6 +421,10 @@ class TradeService
       elsif trade.seller_id == user.id && trade.seller_agreed_at.nil?
         trade.update!(seller_agreed_at: Time.current)
       end
+    end
+
+    def trade_url(trade, **params)
+      Rails.application.routes.url_helpers.trade_url(trade, **params, host: ENV.fetch("APP_HOST", "localhost:3000"))
     end
   end
 end

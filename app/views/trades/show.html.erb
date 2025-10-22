@@ -305,6 +305,50 @@
             <p class="text-sm text-app-muted mt-4">Waiting for seller to restart the signature process.</p>
           <% end %>
 
+        <% when "awaiting_funding" %>
+          <% if @is_buyer %>
+            <p class="text-sm text-app-muted mb-4">Both parties have signed the agreement. Please fund the escrow to proceed.</p>
+
+            <% if current_user.kyc_status != "verified" %>
+              <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+                <h4 class="font-medium text-yellow-900">KYC Verification Required</h4>
+                <p class="text-sm text-yellow-700 mt-1">You need to complete identity verification before funding trades. This helps prevent fraud and protects all parties.</p>
+              </div>
+              <%= link_to "Complete KYC Verification",
+                          edit_user_registration_path,
+                          class: "btn-app-primary" %>
+            <% else %>
+              <%= button_to "Fund Escrow",
+                            fund_trade_path(@trade),
+                            method: :post,
+                            class: "btn-app-primary",
+                            data: {
+                              turbo_confirm: "Proceed to fund #{number_to_currency(@trade.price_cents / 100.0)}?",
+                              turbo: false
+                            } %>
+              <p class="text-xs text-app-muted mt-2">
+                Amount: <%= number_to_currency(@trade.price_cents / 100.0) %>
+                <% if @trade.platform_fee_cents > 0 %>
+                  + <%= number_to_currency(@trade.platform_fee_cents / 100.0) %> platform fee
+                <% end %>
+              </p>
+              <p class="text-xs text-app-muted mt-2">
+                You'll be redirected to Stripe to complete payment securely.
+              </p>
+            <% end %>
+          <% else %>
+            <div class="flex items-center gap-3 p-4 bg-app-subtle rounded-lg">
+              <svg class="animate-spin h-5 w-5 text-app-accent" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <div>
+                <p class="font-medium">Waiting for buyer to fund escrow</p>
+                <p class="text-sm text-app-muted">You'll be notified when funding is complete</p>
+              </div>
+            </div>
+          <% end %>
+
         <% when "funded" %>
           <% if @is_seller %>
             <p class="text-sm text-app-muted mb-4"><%= t("trades.show.next_steps.ship", default: "Provide tracking details once the item ships.") %></p>
