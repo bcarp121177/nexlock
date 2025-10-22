@@ -409,9 +409,53 @@
         <% when "accepted" %>
           <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.accepted", default: "Trade accepted. Payout is processing.") %></p>
         <% when "rejected" %>
-          <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.rejected", default: "Trade rejected. Coordinate return shipping.") %></p>
+          <% if @is_buyer %>
+            <p class="text-sm text-app-muted mb-4">Item rejected. Please ship the return using the provided label.</p>
+            <%= form_with url: mark_return_shipped_trade_path(@trade), method: :post, scope: :trade, local: true do |f| %>
+              <div class="space-y-3">
+                <div>
+                  <%= f.label :carrier, "Return Carrier", class: "block text-xs font-medium text-app-muted uppercase" %>
+                  <%= f.text_field :carrier, class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong" %>
+                </div>
+                <div>
+                  <%= f.label :tracking_number, "Return Tracking Number", class: "block text-xs font-medium text-app-muted uppercase" %>
+                  <%= f.text_field :tracking_number, required: true, class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong" %>
+                </div>
+                <div class="flex justify-end">
+                  <%= f.submit "Mark Return Shipped", class: "btn-app-primary" %>
+                </div>
+              </div>
+            <% end %>
+          <% else %>
+            <p class="text-sm text-app-muted">Waiting for buyer to ship return.</p>
+          <% end %>
+
         <% when "return_in_transit" %>
-          <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.return", default: "Return shipment is in transit.") %></p>
+          <% if @is_seller %>
+            <p class="text-sm text-app-muted mb-4">Return is in transit.</p>
+            <%= button_to "Mark Return Delivered", mark_return_delivered_trade_path(@trade), method: :post, class: "btn-app-primary" %>
+          <% else %>
+            <p class="text-sm text-app-muted">Return shipment is in transit.</p>
+          <% end %>
+
+        <% when "return_delivered_pending_confirmation" %>
+          <% if @is_seller %>
+            <p class="text-sm text-app-muted mb-4">Return has been delivered. Please confirm receipt.</p>
+            <%= button_to "Confirm Return Receipt", confirm_return_receipt_trade_path(@trade), method: :post, class: "btn-app-primary" %>
+          <% else %>
+            <p class="text-sm text-app-muted">Waiting for seller to confirm return receipt.</p>
+          <% end %>
+
+        <% when "return_inspection" %>
+          <% if @is_seller %>
+            <p class="text-sm text-app-muted mb-4">Inspect the returned item.</p>
+            <div class="flex gap-2">
+              <%= button_to "Accept Return", accept_return_trade_path(@trade), method: :post, class: "btn-app-primary", data: { turbo_confirm: "Accept the return and issue refund?" } %>
+              <%= button_to "Reject Return", reject_return_trade_path(@trade), method: :post, class: "btn-app-secondary", data: { turbo_confirm: "Reject the return and open a dispute?" } %>
+            </div>
+          <% else %>
+            <p class="text-sm text-app-muted">Seller is inspecting the return.</p>
+          <% end %>
         <% when "released", "refunded", "resolved_release", "resolved_refund", "resolved_split" %>
           <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.completed", default: "Trade completed.") %></p>
         <% else %>

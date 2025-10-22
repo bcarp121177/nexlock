@@ -84,6 +84,8 @@ class Trade < ApplicationRecord
     state :released
     state :rejected
     state :return_in_transit
+    state :return_delivered_pending_confirmation
+    state :return_inspection
     state :returned
     state :refunded
     state :disputed
@@ -164,12 +166,24 @@ class Trade < ApplicationRecord
       transitions from: :inspection, to: :rejected, guard: :has_evidence?, after: %i[generate_return_label notify_seller_rejected]
     end
 
-    event :mark_return_in_transit do
+    event :mark_return_shipped do
       transitions from: :rejected, to: :return_in_transit
     end
 
-    event :mark_returned do
-      transitions from: :return_in_transit, to: :returned, after: :hold_seller_inspection
+    event :mark_return_delivered do
+      transitions from: :return_in_transit, to: :return_delivered_pending_confirmation
+    end
+
+    event :confirm_return_receipt do
+      transitions from: :return_delivered_pending_confirmation, to: :return_inspection, after: :start_return_inspection_window
+    end
+
+    event :accept_return do
+      transitions from: :return_inspection, to: :returned
+    end
+
+    event :reject_return do
+      transitions from: :return_inspection, to: :disputed
     end
 
     event :refund do
@@ -447,6 +461,13 @@ class Trade < ApplicationRecord
     )
 
     Rails.logger.info "Return label created: #{result[:shipment][:tracking_number]}"
+  end
+
+  def start_return_inspection_window
+    hours = ENV.fetch('RETURN_INSPECTION_HOURS', '48').to_i
+    deadline = Time.current + hours.hours
+    update!(return_inspection_ends_at: deadline)
+    Rails.logger.info "Seller has #{hours} hours to inspect returned item (until #{deadline})"
   end
 
   def hold_seller_inspection

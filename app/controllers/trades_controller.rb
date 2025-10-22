@@ -4,7 +4,7 @@ class TradesController < ApplicationController
   before_action :authenticate_user!
   before_action :ensure_account
   before_action :set_trades_scope, only: [:index]
-  before_action :set_trade, only: [:show, :attach_media, :send_to_buyer, :agree, :fund, :ship, :mark_delivered, :confirm_receipt, :accept, :reject, :send_for_signature, :cancel_signature_request, :retry_signature, :signing_url]
+  before_action :set_trade, only: [:show, :attach_media, :send_to_buyer, :agree, :fund, :ship, :mark_delivered, :confirm_receipt, :accept, :reject, :send_for_signature, :cancel_signature_request, :retry_signature, :signing_url, :mark_return_shipped, :mark_return_delivered, :confirm_return_receipt, :accept_return, :reject_return]
 
   def index
     @pagy, @trades = pagy(@trades_scope.ordered, limit: 25)
@@ -252,6 +252,57 @@ class TradesController < ApplicationController
   def signing_url
     result = TradeService.get_signing_url(@trade, current_user)
     render json: result
+  end
+
+  # Return workflow actions
+  def mark_return_shipped
+    result = TradeService.mark_return_shipped(@trade, **ship_params)
+
+    if result[:success]
+      redirect_to trade_path(@trade), notice: "Return shipment recorded."
+    else
+      redirect_to trade_path(@trade), alert: result[:error]
+    end
+  end
+
+  def mark_return_delivered
+    result = TradeService.mark_return_delivered(@trade)
+
+    if result[:success]
+      redirect_to trade_path(@trade), notice: "Return marked as delivered."
+    else
+      redirect_to trade_path(@trade), alert: result[:error]
+    end
+  end
+
+  def confirm_return_receipt
+    result = TradeService.confirm_return_receipt(@trade)
+
+    if result[:success]
+      redirect_to trade_path(@trade), notice: "Return receipt confirmed. Please inspect the item."
+    else
+      redirect_to trade_path(@trade), alert: result[:error]
+    end
+  end
+
+  def accept_return
+    result = TradeService.accept_return(@trade)
+
+    if result[:success]
+      redirect_to trade_path(@trade), notice: result[:message]
+    else
+      redirect_to trade_path(@trade), alert: result[:error]
+    end
+  end
+
+  def reject_return
+    result = TradeService.reject_return(@trade)
+
+    if result[:success]
+      redirect_to trade_path(@trade), notice: result[:message]
+    else
+      redirect_to trade_path(@trade), alert: result[:error]
+    end
   end
 
   private

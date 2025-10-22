@@ -13,6 +13,11 @@ resources :trades, only: [:index, :new, :create, :show] do
     post :confirm_receipt
     post :accept
     post :reject
+    post :mark_return_shipped
+    post :mark_return_delivered
+    post :confirm_return_receipt
+    post :accept_return
+    post :reject_return
   end
 
   resources :trade_documents, only: [:index, :show] do

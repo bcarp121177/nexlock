@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_22_201310) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_22_213419) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -513,6 +513,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_22_201310) do
     t.datetime "receipt_confirmation_deadline_at"
     t.datetime "rejected_at"
     t.string "rejection_category"
+    t.datetime "return_inspection_ends_at"
     t.integer "return_shipping_cost_cents"
     t.string "return_shipping_paid_by", default: "seller", null: false
     t.datetime "seller_agreed_at"

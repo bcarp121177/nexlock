@@ -235,6 +235,63 @@ class TradeService
       end
     end
 
+    # Return workflow methods
+    def mark_return_shipped(trade, carrier:, tracking_number:)
+      return { success: false, error: "Trade must be in rejected state" } unless trade.may_mark_return_shipped?
+      return { success: false, error: "Tracking number is required" } if tracking_number.blank?
+
+      shipment = trade.shipments.create!(
+        account: trade.account,
+        carrier: carrier.presence || "Unknown",
+        tracking_number: tracking_number,
+        direction: "return",
+        status: "in_transit",
+        shipped_at: Time.current
+      )
+
+      trade.mark_return_shipped!
+
+      { success: true, shipment: shipment }
+    rescue => e
+      { success: false, error: e.message }
+    end
+
+    def mark_return_delivered(trade)
+      return { success: false, error: "Invalid state" } unless trade.may_mark_return_delivered?
+
+      trade.mark_return_delivered!
+      { success: true }
+    rescue => e
+      { success: false, error: e.message }
+    end
+
+    def confirm_return_receipt(trade)
+      return { success: false, error: "Invalid state" } unless trade.may_confirm_return_receipt?
+
+      trade.confirm_return_receipt!
+      { success: true }
+    rescue => e
+      { success: false, error: e.message }
+    end
+
+    def accept_return(trade)
+      return { success: false, error: "Invalid state" } unless trade.may_accept_return?
+
+      trade.accept_return!
+      { success: true, message: "Return accepted. Refund will be processed." }
+    rescue => e
+      { success: false, error: e.message }
+    end
+
+    def reject_return(trade)
+      return { success: false, error: "Invalid state" } unless trade.may_reject_return?
+
+      trade.reject_return!
+      { success: true, message: "Return rejected. Dispute opened." }
+    rescue => e
+      { success: false, error: e.message }
+    end
+
     def calculate_payout_amount(trade)
       fees = calculate_platform_fee(trade.price_cents, fee_split: trade.fee_split)
       trade.price_cents - fees[:seller_fee]
