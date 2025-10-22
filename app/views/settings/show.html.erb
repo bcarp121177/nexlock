@@ -1,0 +1,74 @@
+<% page_title = t("settings.title", default: "Banking") %>
+<% page_subtitle = t("settings.subtitle", default: "Connect Stripe to receive escrow payouts.") %>
+<% Current.meta_tags.set(title: page_title) %>
+
+<div class="space-y-8">
+  <%= render PageHeaderComponent.new(title: page_title, subtitle: page_subtitle) %>
+
+  <div class="space-y-6">
+    <%= render CardComponent.new do %>
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 class="text-lg font-semibold text-app-strong"><%= t("settings.stripe.heading", default: "Stripe Connect") %></h2>
+          <p class="mt-1 text-sm text-app-muted">
+            <%= t("settings.stripe.description", default: "Set up payouts so you can receive funds from completed trades.") %>
+          </p>
+
+          <% if @stripe_error.present? && @stripe_error != :missing_account %>
+            <p class="mt-2 text-sm text-app-danger"><%= @stripe_error %></p>
+          <% end %>
+
+          <% if (requirements = stripe_requirements(@stripe_account)).any? %>
+            <div class="mt-4 p-4 rounded-lg bg-[color:var(--app-warning-soft-bg)] text-sm text-app-warning">
+              <p class="font-semibold"><%= t("settings.stripe.requirements.heading", default: "Additional information required") %></p>
+              <ul class="mt-2 space-y-1 list-disc list-inside">
+                <% requirements.each do |item| %>
+                  <li><%= item.tr("_", " ") %></li>
+                <% end %>
+              </ul>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="flex flex-col items-start gap-3 md:items-end">
+          <%= stripe_payout_status_badge(@stripe_account) %>
+
+          <% onboarding_label_key = @stripe_account ? "settings.stripe.continue" : "settings.stripe.start" %>
+          <%= button_to t(onboarding_label_key, default: (@stripe_account ? "Continue Onboarding" : "Start Onboarding")),
+                        start_stripe_onboarding_settings_path,
+                        method: :post,
+                        params: { business_type: params[:business_type] || "individual" },
+                        class: "btn-app-primary",
+                        form: { data: { turbo: false } } %>
+
+          <% if @stripe_account %>
+            <p class="text-xs text-app-muted">
+              <%= t("settings.stripe.connected_id", default: "Connected account: %{id}", id: @stripe_account[:id]) %>
+            </p>
+          <% end %>
+          <p class="text-xs text-app-muted">
+            <%= t("settings.stripe.kyc_status", default: "KYC status: %{status}", status: current_user.kyc_status.titleize) %>
+          </p>
+        </div>
+      </div>
+
+      <% if @stripe_account %>
+        <div class="mt-6 grid gap-4 md:grid-cols-3">
+          <div>
+            <p class="text-sm text-app-muted"><%= t("settings.stripe.details_submitted", default: "Details submitted") %></p>
+            <p class="mt-1 text-base font-semibold text-app-strong"><%= @stripe_account[:details_submitted] ? t("settings.common.yes", default: "Yes") : t("settings.common.no", default: "No") %></p>
+          </div>
+          <div>
+            <p class="text-sm text-app-muted"><%= t("settings.stripe.charges_enabled", default: "Charges enabled") %></p>
+            <p class="mt-1 text-base font-semibold text-app-strong"><%= @stripe_account[:charges_enabled] ? t("settings.common.yes", default: "Yes") : t("settings.common.no", default: "No") %></p>
+          </div>
+          <div>
+            <p class="text-sm text-app-muted"><%= t("settings.stripe.payouts_enabled_label", default: "Payouts enabled") %></p>
+            <p class="mt-1 text-base font-semibold text-app-strong"><%= @stripe_account[:payouts_enabled] ? t("settings.common.yes", default: "Yes") : t("settings.common.no", default: "No") %></p>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+
+  </div>
+</div>

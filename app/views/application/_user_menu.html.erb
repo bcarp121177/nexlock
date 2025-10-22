@@ -15,6 +15,7 @@
         <ul class="menu-sub-list">
           <li><%= link_to t(".profile"), edit_user_registration_path %></li>
           <li><%= link_to t(".password"), edit_account_password_path %></li>
+          <li><%= link_to t(".settings", default: "Settings"), settings_path %></li>
           <li><%= link_to t(".connected_accounts"), user_connected_accounts_path if Devise.omniauth_configs.any? %></li>
           <li><%= link_to t(".billing"), billing_path if Jumpstart.config.payments_enabled? %></li>
           <li><%= link_to t(".accounts"), accounts_path if Jumpstart.config.team_accounts? %></li>

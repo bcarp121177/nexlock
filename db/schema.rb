@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_04_18_193000) do
+ActiveRecord::Schema[8.1].define(version: 2025_04_18_194000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -566,6 +566,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_04_18_193000) do
     t.integer "invitations_count", default: 0
     t.bigint "invited_by_id"
     t.string "invited_by_type"
+    t.string "kyc_status", default: "pending", null: false
     t.string "last_name"
     t.integer "last_otp_timestep"
     t.virtual "name", type: :string, as: "(((first_name)::text || ' '::text) || (COALESCE(last_name, ''::character varying))::text)", stored: true
@@ -577,6 +578,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_04_18_193000) do
     t.datetime "remember_created_at", precision: nil
     t.datetime "reset_password_sent_at", precision: nil
     t.string "reset_password_token"
+    t.string "stripe_connect_id"
     t.string "time_zone"
     t.string "unconfirmed_email"
     t.datetime "updated_at", precision: nil, null: false
@@ -586,6 +588,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_04_18_193000) do
     t.index ["invited_by_id"], name: "index_users_on_invited_by_id"
     t.index ["invited_by_type", "invited_by_id"], name: "index_users_on_invited_by_type_and_invited_by_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
+    t.index ["stripe_connect_id"], name: "index_users_on_stripe_connect_id", unique: true
   end
 
   add_foreign_key "account_invitations", "accounts"

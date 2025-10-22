@@ -169,6 +169,7 @@ en:
       password: "Password"
       connected_accounts: "Connected Accounts"
       billing: "Billing"
+      banking: "Banking"
       accounts: "Accounts"
       api_tokens: "API"
       referrals: "Referrals"
@@ -177,6 +178,7 @@ en:
     user_menu:
       profile: "Profile"
       password: "Password"
+      settings: "Settings"
       connected_accounts: "Connected Accounts"
       billing: "Billing"
       api_tokens: "API"
@@ -218,6 +220,31 @@ en:
       cancelled: "Payment Cancelled"
       cancelled_description: "This payment was cancelled."
       confirm: "Confirm your %{amount} payment"
+
+  settings:
+    title: "Banking"
+    subtitle: "Connect Stripe to receive escrow payouts."
+    common:
+      yes: "Yes"
+      no: "No"
+    stripe:
+      heading: "Stripe Connect"
+      description: "Set up payouts so you can receive funds from completed trades."
+      start: "Start Onboarding"
+      continue: "Continue Onboarding"
+      not_connected: "Not connected"
+      payouts_enabled: "Payouts enabled"
+      action_required: "Action required"
+      connected_id: "Connected account: %{id}"
+      kyc_status: "KYC status: %{status}"
+      details_submitted: "Details submitted"
+      charges_enabled: "Charges enabled"
+      payouts_enabled_label: "Payouts enabled"
+      requirements:
+        heading: "Additional information required"
+      invalid_business_type: "Invalid business type"
+      invalid_redirect: "Unable to start onboarding. Contact support."
+      start_failed: "Unable to start onboarding."
       confirm_description: "Extra confirmation is needed to process your payment. Please confirm your payment by filling out your payment details below."
       back: "Go back"
       confirm_button: "Confirm Payment"

@@ -62,6 +62,10 @@
     border-color: var(--app-border-strong);
   }
 
+  .border-app-focus {
+    border-color: var(--app-border-focus);
+  }
+
   .ring-app-focus {
     --tw-ring-color: var(--app-border-focus);
     --tw-ring-offset-color: var(--app-surface-card);

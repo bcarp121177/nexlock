@@ -23,4 +23,13 @@ class User < ApplicationRecord
 
   validates :avatar, resizable_image: true
   validates :name, presence: true
+  validates :kyc_status, inclusion: { in: %w[pending verified rejected] }
+
+  def stripe_account_active?
+    stripe_connect_id.present? && kyc_status == "verified"
+  end
+
+  def can_receive_payouts?
+    stripe_account_active?
+  end
 end

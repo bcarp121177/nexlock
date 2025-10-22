@@ -6,6 +6,8 @@ Rails.application.routes.draw do
   draw :hotwire_native
   draw :users
   draw :trades
+  draw :settings
+  draw :webhooks
   draw :dev if Rails.env.local?
 
   authenticated :user, lambda { |u| u.admin? } do
