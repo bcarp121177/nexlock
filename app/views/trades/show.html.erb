@@ -1,0 +1,302 @@
+<% page_title = t("trades.show.title", default: "Trade Details") %>
+<% Current.meta_tags.set(title: page_title) %>
+
+<div class="space-y-8">
+  <%= render PageHeaderComponent.new(title: page_title, subtitle: t("trades.show.subtitle", default: "Track progress and manage actions for this trade.")) do |header| %>
+    <% header.actions do %>
+      <%= link_to t("trades.show.back", default: "Back to trades"), trades_path, class: "btn-app-secondary" %>
+    <% end %>
+  <% end %>
+
+  <div class="grid gap-6 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+    <div class="space-y-6">
+      <%= render CardComponent.new do %>
+        <div class="flex flex-wrap items-center gap-3 justify-between">
+          <div>
+            <p class="text-sm text-app-muted"><%= t("trades.show.labels.status", default: "Status") %></p>
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+              <%= trade_state_badge(@trade) %>
+              <% if current_user == @trade.seller %>
+                <span class="badge-app badge-app-info"><%= t("trades.show.roles.seller", default: "Seller") %></span>
+              <% elsif current_user == @trade.buyer %>
+                <span class="badge-app badge-app-info"><%= t("trades.show.roles.buyer", default: "Buyer") %></span>
+              <% else %>
+                <span class="badge-app badge-app-info"><%= t("trades.show.roles.viewer", default: "Viewer") %></span>
+              <% end %>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-app-muted"><%= t("trades.show.labels.total", default: "Total amount") %></p>
+            <p class="mt-1 text-2xl font-semibold text-app-strong"><%= trade_price(@trade) %></p>
+          </div>
+        </div>
+      <% end %>
+
+      <%= render CardComponent.new do %>
+        <h2 class="text-lg font-semibold text-app-strong mb-4"><%= t("trades.form.sections.item", default: "Item Details") %></h2>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <p class="text-xs uppercase tracking-wide text-app-muted"><%= t("trades.form.labels.item_name", default: "Item name") %></p>
+            <p class="mt-1 text-app-strong font-medium"><%= @trade.item&.name || t("trades.show.missing", default: "Not provided") %></p>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-wide text-app-muted"><%= t("trades.form.labels.item_category", default: "Category") %></p>
+            <p class="mt-1 text-app-strong font-medium"><%= @trade.item&.category&.titleize || t("trades.show.missing", default: "Not provided") %></p>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-wide text-app-muted"><%= t("trades.form.labels.item_condition", default: "Condition") %></p>
+            <p class="mt-1 text-app-strong font-medium"><%= @trade.item&.condition&.titleize || t("trades.show.missing", default: "Not provided") %></p>
+          </div>
+          <div class="md:col-span-2">
+            <p class="text-xs uppercase tracking-wide text-app-muted"><%= t("trades.form.labels.item_description", default: "Description") %></p>
+            <p class="mt-1 text-app-body whitespace-pre-line"><%= @trade.item&.description || t("trades.show.missing", default: "Not provided") %></p>
+          </div>
+        </div>
+      <% end %>
+
+      <%= render CardComponent.new do %>
+        <h2 class="text-lg font-semibold text-app-strong mb-4"><%= t("trades.show.sections.trade", default: "Trade Information") %></h2>
+        <div class="grid gap-4 md:grid-cols-2">
+          <div>
+            <p class="text-xs uppercase tracking-wide text-app-muted"><%= t("trades.show.labels.buyer", default: "Buyer") %></p>
+            <p class="mt-1 text-app-strong font-medium"><%= @trade.buyer&.name || @trade.buyer_email %></p>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-wide text-app-muted"><%= t("trades.show.labels.seller", default: "Seller") %></p>
+            <p class="mt-1 text-app-strong font-medium"><%= @trade.seller.name %></p>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-wide text-app-muted"><%= t("trades.form.labels.inspection", default: "Inspection window") %></p>
+            <p class="mt-1 text-app-strong font-medium"><%= t("trades.form.options.hours", default: "%{hours} hours", hours: @trade.inspection_window_hours) %></p>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-wide text-app-muted"><%= t("trades.show.labels.fee_split", default: "Platform fee") %></p>
+            <p class="mt-1 text-app-strong font-medium">
+              <%= number_to_currency(@trade.platform_fee_cents.to_f / 100) %>
+              <span class="text-xs text-app-muted">(<%= @trade.fee_split.titleize %>)</span>
+            </p>
+          </div>
+          <div>
+            <p class="text-xs uppercase tracking-wide text-app-muted"><%= t("trades.show.labels.created", default: "Created") %></p>
+            <p class="mt-1 text-app-strong font-medium"><%= l(@trade.created_at, format: :long) %></p>
+          </div>
+          <%# TODO: Add signed_agreement_url attribute/method to Trade model %>
+          <%# if @trade.signed_agreement_url.present? %>
+            <%# <div> %>
+              <%# <p class="text-xs uppercase tracking-wide text-app-muted"><%= t("trades.show.labels.agreement", default: "Signed agreement") %>
+              <%#= link_to t("trades.show.actions.view_agreement", default: "View PDF"), @trade.signed_agreement_url, target: "_blank", rel: "noopener", class: "mt-1 inline-flex text-sm text-app-accent hover:underline" %>
+            <%# </div> %>
+          <%# end %>
+        </div>
+      <% end %>
+
+      <% if @trade.shipments.any? %>
+        <%= render CardComponent.new do %>
+          <h2 class="text-lg font-semibold text-app-strong mb-4"><%= t("trades.show.sections.shipments", default: "Shipments") %></h2>
+          <div class="space-y-6">
+            <% @trade.shipments.each do |shipment| %>
+              <div class="border border-app-subtle rounded-lg p-4">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                  <span class="badge-app badge-app-info"><%= shipment.direction == "forward" ? t("trades.show.shipment.forward", default: "Forward") : t("trades.show.shipment.return", default: "Return") %></span>
+                  <% if shipment.status.present? %>
+                    <span class="badge-app badge-app-success"><%= shipment.status.titleize %></span>
+                  <% end %>
+                </div>
+                <dl class="mt-3 grid gap-3 md:grid-cols-2 text-sm">
+                  <div>
+                    <dt class="text-app-muted"><%= t("trades.show.shipment.carrier", default: "Carrier") %></dt>
+                    <dd class="text-app-strong"><%= shipment.carrier.presence || t("trades.show.missing") %></dd>
+                  </div>
+                  <div>
+                    <dt class="text-app-muted"><%= t("trades.show.shipment.tracking", default: "Tracking number") %></dt>
+                    <dd class="text-app-strong">
+                      <code class="rounded bg-app-muted px-2 py-1"><%= shipment.tracking_number.presence || t("trades.show.missing") %></code>
+                      <% if shipment.tracking_url.present? %>
+                        <%= link_to t("trades.show.actions.track", default: "Track"), shipment.tracking_url, target: "_blank", rel: "noopener", class: "ml-2 text-xs text-app-accent hover:underline" %>
+                      <% end %>
+                    </dd>
+                  </div>
+                  <% if shipment.label_url.present? %>
+                    <div>
+                      <dt class="text-app-muted"><%= t("trades.show.shipment.label", default: "Label") %></dt>
+                      <dd><%= link_to t("trades.show.actions.download_label", default: "Download"), shipment.label_url, target: "_blank", rel: "noopener", class: "text-app-accent hover:underline" %></dd>
+                    </div>
+                  <% end %>
+                  <% if shipment.delivered_at.present? %>
+                    <div>
+                      <dt class="text-app-muted"><%= t("trades.show.shipment.delivered", default: "Delivered") %></dt>
+                      <dd class="text-app-strong"><%= l(shipment.delivered_at, format: :long) %></dd>
+                    </div>
+                  <% end %>
+                </dl>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      <% end %>
+
+      <%= render CardComponent.new do %>
+        <h2 class="text-lg font-semibold text-app-strong mb-4"><%= t("trades.show.sections.media", default: "Photos & Videos") %></h2>
+
+        <% if @trade.media.attached? %>
+          <div class="space-y-6">
+            <% if @image_attachments.any? %>
+              <div class="grid gap-4 md:grid-cols-3">
+                <% @image_attachments.each do |attachment| %>
+                  <div class="relative overflow-hidden rounded-lg border border-app-subtle">
+                    <% if attachment.variable? %>
+                      <%= image_tag attachment.variant(resize_to_limit: [800, 800]).processed, class: "w-full h-48 object-cover" %>
+                    <% else %>
+                      <%= image_tag attachment, class: "w-full h-48 object-cover" %>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+
+            <% if @video_attachments.any? %>
+              <div class="space-y-4">
+                <% @video_attachments.each do |attachment| %>
+                  <div class="overflow-hidden rounded-lg border border-app-subtle">
+                    <video controls class="w-full">
+                      <source src="<%= url_for(attachment) %>" type="<%= attachment.blob.content_type %>">
+                    </video>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="text-sm text-app-muted"><%= t("trades.show.media.none", default: "No media uploaded yet.") %></p>
+        <% end %>
+
+        <hr class="my-4 border-app-subtle">
+
+        <%= form_with model: @trade, url: attach_media_trade_path(@trade), method: :post, local: true, multipart: true do |media_form| %>
+          <div class="flex flex-wrap items-center gap-3">
+            <div>
+              <%= media_form.file_field :media_files, multiple: true, direct_upload: true, accept: "image/*,video/*", class: "block w-full text-sm text-app-body" %>
+            </div>
+            <button type="submit" class="btn-app-secondary"><%= t("trades.show.actions.upload_media", default: "Upload") %></button>
+          </div>
+          <p class="mt-2 text-xs text-app-muted"><%= t("trades.show.media.hint", default: "Upload images or short videos to document the item.") %></p>
+        <% end %>
+      <% end %>
+    </div>
+
+    <div class="space-y-6">
+      <%= render CardComponent.new do %>
+        <h3 class="text-base font-semibold text-app-strong mb-3"><%= t("trades.show.sections.summary", default: "Summary") %></h3>
+        <dl class="space-y-3 text-sm">
+          <div>
+            <dt class="text-app-muted"><%= t("trades.show.labels.state", default: "Current state") %></dt>
+            <dd class="text-app-strong"><%= @trade.formatted_state %></dd>
+          </div>
+          <div>
+            <dt class="text-app-muted"><%= t("trades.show.labels.buyer_email", default: "Buyer email") %></dt>
+            <dd class="text-app-strong"><%= @trade.buyer_email %></dd>
+          </div>
+          <div>
+            <dt class="text-app-muted"><%= t("trades.show.labels.last_updated", default: "Last updated") %></dt>
+            <dd class="text-app-strong"><%= l(@trade.updated_at, format: :long) %></dd>
+          </div>
+        </dl>
+      <% end %>
+
+      <%= render CardComponent.new do %>
+        <h3 class="text-base font-semibold text-app-strong mb-3"><%= t("trades.show.sections.next_steps", default: "Next steps") %></h3>
+        <% case @trade.state %>
+        <% when "draft" %>
+          <% if @is_seller %>
+            <p class="text-sm text-app-muted mb-4">
+              <% if @invitation_sent %>
+                <%= t("trades.show.next_steps.sent", default: "You sent the trade to the buyer. Waiting for their agreement.") %>
+              <% else %>
+                <%= t("trades.show.next_steps.ready_to_send", default: "Review the details and invite the buyer to agree to the terms.") %>
+              <% end %>
+            </p>
+            <% unless @invitation_sent %>
+              <%= button_to t("trades.show.actions.send_to_buyer", default: "Send to Buyer"), send_to_buyer_trade_path(@trade), method: :post, class: "btn-app-primary" %>
+            <% end %>
+          <% elsif @is_buyer %>
+            <% if @trade.buyer_agreed_at.present? %>
+              <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.buyer_waiting", default: "Thanks for agreeing. Waiting for seller to proceed.") %></p>
+            <% else %>
+              <p class="text-sm text-app-muted mb-4"><%= t("trades.show.next_steps.buyer_invited", default: "Review the trade terms and agree to move forward.") %></p>
+              <%= button_to t("trades.show.actions.agree", default: "Agree to Terms"), agree_trade_path(@trade), method: :post, class: "btn-app-primary" %>
+            <% end %>
+          <% else %>
+            <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.viewer", default: "Waiting for buyer and seller to agree to the draft.") %></p>
+          <% end %>
+        <% when "funded" %>
+          <% if @is_seller %>
+            <p class="text-sm text-app-muted mb-4"><%= t("trades.show.next_steps.ship", default: "Provide tracking details once the item ships.") %></p>
+            <%= form_with url: ship_trade_path(@trade), method: :post, scope: :trade, local: true do |f| %>
+              <div class="space-y-3">
+                <div>
+                  <%= f.label :carrier, t("trades.show.shipment.carrier", default: "Carrier"), class: "block text-xs font-medium text-app-muted uppercase" %>
+                  <%= f.text_field :carrier, class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+                </div>
+                <div>
+                  <%= f.label :tracking_number, t("trades.show.shipment.tracking", default: "Tracking number"), class: "block text-xs font-medium text-app-muted uppercase" %>
+                  <%= f.text_field :tracking_number, required: true, class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+                </div>
+                <div class="flex justify-end">
+                  <%= f.submit t("trades.show.actions.ship", default: "Record Shipment"), class: "btn-app-primary" %>
+                </div>
+              </div>
+            <% end %>
+          <% else %>
+            <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.funded_wait", default: "Waiting for seller to ship the item.") %></p>
+          <% end %>
+        <% when "shipped" %>
+          <% if @is_buyer %>
+            <p class="text-sm text-app-muted mb-4"><%= t("trades.show.next_steps.shipped", default: "Mark the trade delivered once the package arrives.") %></p>
+            <%= button_to t("trades.show.actions.mark_delivered", default: "Mark as Delivered"), mark_delivered_trade_path(@trade), method: :post, class: "btn-app-primary" %>
+          <% else %>
+            <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.shipped_wait", default: "Item is in transit. Waiting for buyer confirmation.") %></p>
+          <% end %>
+        <% when "delivered_pending_confirmation" %>
+          <% if @is_buyer %>
+            <p class="text-sm text-app-muted mb-4"><%= t("trades.show.next_steps.delivered", default: "Confirm receipt to start the inspection window.") %></p>
+            <%= button_to t("trades.show.actions.confirm_receipt", default: "Confirm Receipt"), confirm_receipt_trade_path(@trade), method: :post, class: "btn-app-primary" %>
+          <% else %>
+            <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.delivered_wait", default: "Waiting for buyer to confirm receipt.") %></p>
+          <% end %>
+        <% when "inspection" %>
+          <% if @is_buyer %>
+            <p class="text-sm text-app-muted mb-4"><%= t("trades.show.next_steps.inspection", default: "Inspect the item and accept or reject it.") %></p>
+            <div class="flex flex-wrap items-center gap-3">
+              <%= button_to t("trades.show.actions.accept", default: "Accept Item"), accept_trade_path(@trade), method: :post, class: "btn-app-primary" %>
+              <%= form_with url: reject_trade_path(@trade), method: :post, scope: :trade, local: true, class: "w-full space-y-3" do |f| %>
+                <div>
+                  <%= f.label :reason_category, t("trades.show.actions.reject_category", default: "Reason"), class: "block text-xs font-medium text-app-muted uppercase" %>
+                  <%= f.select :reason_category, Trade::REJECTION_CATEGORIES.map { |cat| [cat.titleize, cat] }, {}, class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+                </div>
+                <div>
+                  <%= f.label :reason_text, t("trades.show.actions.reject_reason", default: "Details"), class: "block text-xs font-medium text-app-muted uppercase" %>
+                  <%= f.text_area :reason_text, rows: 3, required: true, class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+                </div>
+                <div class="flex justify-end">
+                  <%= f.submit t("trades.show.actions.reject", default: "Reject Item"), class: "btn-app-secondary" %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.inspection_wait", default: "Waiting for buyer to accept or reject the item.") %></p>
+          <% end %>
+        <% when "accepted" %>
+          <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.accepted", default: "Trade accepted. Payout is processing.") %></p>
+        <% when "rejected" %>
+          <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.rejected", default: "Trade rejected. Coordinate return shipping.") %></p>
+        <% when "return_in_transit" %>
+          <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.return", default: "Return shipment is in transit.") %></p>
+        <% when "released", "refunded", "resolved_release", "resolved_refund", "resolved_split" %>
+          <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.completed", default: "Trade completed.") %></p>
+        <% else %>
+          <p class="text-sm text-app-muted"><%= t("trades.show.next_steps.progress", default: "Additional workflow actions will appear here as they are implemented.") %></p>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+</div>

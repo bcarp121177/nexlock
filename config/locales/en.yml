@@ -250,6 +250,7 @@ en:
     index:
       title: "Trades"
       subtitle: "Monitor every trade through its escrow workflow."
+      new_trade: "New Trade"
       metrics:
         total: "Total Trades"
         attention: "Needs Attention"
@@ -269,6 +270,31 @@ en:
       back: "Back to trades"
     create:
       success: "Trade draft created."
+    media:
+      uploaded: "Media uploaded."
+      missing: "Select at least one file to upload."
+    actions:
+      errors:
+        not_party: "You are not a party to this trade."
+        tracking_required: "Tracking number is required."
+        reason_required: "Reason is required"
+        invalid_state: "This action is not available in the current state."
+        invalid_reason: "Invalid rejection reason."
+      agreement:
+        recorded: "Agreement recorded. Waiting for the other party."
+        ready: "Both parties agreed. Signature process started."
+      invitation:
+        sent: "Invitation sent to buyer."
+      errors_generic: "Unable to complete this action."
+      shipped: "Shipment recorded."
+      delivered: "Trade marked as delivered."
+      receipt_confirmed: "Receipt confirmed. Inspection started."
+      accepted: "Trade accepted."
+      rejected: "Trade rejected."
+    service:
+      errors:
+        same_party: "Buyer and seller cannot be the same user."
+        price_required: "Enter a valid price."
     form:
       errors:
         heading: "Please fix the following"
@@ -303,9 +329,77 @@ en:
       actions:
         cancel: "Cancel"
         submit: "Create Trade"
-      confirm_description: "Extra confirmation is needed to process your payment. Please confirm your payment by filling out your payment details below."
-      back: "Go back"
-      confirm_button: "Confirm Payment"
+    show:
+      title: "Trade Details"
+      subtitle: "Track progress and manage actions for this trade."
+      back: "Back to trades"
+      labels:
+        status: "Status"
+        total: "Total amount"
+        buyer: "Buyer"
+        seller: "Seller"
+        fee_split: "Platform fee"
+        created: "Created"
+        agreement: "Signed agreement"
+        state: "Current state"
+        buyer_email: "Buyer email"
+        last_updated: "Last updated"
+      roles:
+        seller: "Seller"
+        buyer: "Buyer"
+        viewer: "Viewer"
+      sections:
+        trade: "Trade Information"
+        shipments: "Shipments"
+        media: "Photos & Videos"
+        summary: "Summary"
+        next_steps: "Next steps"
+      shipment:
+        forward: "Forward"
+        return: "Return"
+        carrier: "Carrier"
+        tracking: "Tracking number"
+        label: "Label"
+        delivered: "Delivered"
+      media:
+        none: "No media uploaded yet."
+        hint: "Upload images or short videos to document the item."
+        uploaded: "Media uploaded."
+        missing: "Select at least one file to upload."
+      actions:
+        view_agreement: "View PDF"
+        track: "Track"
+        download_label: "Download"
+        upload_media: "Upload"
+        send_to_buyer: "Send to Buyer"
+        agree: "Agree to Terms"
+        ship: "Record Shipment"
+        mark_delivered: "Mark as Delivered"
+        confirm_receipt: "Confirm Receipt"
+        accept: "Accept Item"
+        reject: "Reject Item"
+        reject_category: "Reason"
+        reject_reason: "Details"
+      next_steps:
+        ready_to_send: "Review the details and invite the buyer to agree to the terms."
+        sent: "You sent the trade to the buyer. Waiting for their agreement."
+        buyer_invited: "Review the trade terms and agree to move forward."
+        buyer_waiting: "Thanks for agreeing. Waiting for seller to proceed."
+        viewer: "Waiting for buyer and seller to agree to the draft."
+        ship: "Provide tracking details once the item ships."
+        funded_wait: "Waiting for seller to ship the item."
+        shipped: "Mark the trade delivered once the package arrives."
+        shipped_wait: "Item is in transit. Waiting for buyer confirmation."
+        delivered: "Confirm receipt to start the inspection window."
+        delivered_wait: "Waiting for buyer to confirm receipt."
+        inspection: "Inspect the item and accept or reject it."
+        inspection_wait: "Waiting for buyer to accept or reject the item."
+        accepted: "Trade accepted. Payout is processing."
+        rejected: "Trade rejected. Coordinate return shipping."
+        return: "Return shipment is in transit."
+        completed: "Trade completed."
+        progress: "Additional workflow actions will appear here as they are implemented."
+      missing: "Not provided"
 
   pricing:
     no_plans_html: "There are no pricing plans configured. %{link}."

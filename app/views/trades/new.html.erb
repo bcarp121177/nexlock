@@ -33,7 +33,7 @@
 
           <div>
             <%= form.label :buyer_email, t("trades.form.labels.buyer_email", default: "Buyer email address"), class: "block text-sm font-medium text-app-strong" %>
-            <%= form.email_field :buyer_email, required: true, class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+            <%= form.email_field :buyer_email, required: true, value: "buyer@example.com", class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
             <p class="mt-1 text-xs text-app-muted"><%= t("trades.form.hints.buyer_email", default: "We'll invite this buyer to review and agree to the trade.") %></p>
           </div>
         </section>
@@ -46,12 +46,12 @@
               <div class="space-y-4">
                 <div>
                   <%= item_fields.label :name, t("trades.form.labels.item_name", default: "Item name"), class: "block text-sm font-medium text-app-strong" %>
-                  <%= item_fields.text_field :name, required: true, placeholder: "e.g., Fender Stratocaster", class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+                  <%= item_fields.text_field :name, required: true, value: "Test Guitar", placeholder: "e.g., Fender Stratocaster", class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
                 </div>
 
                 <div>
                   <%= item_fields.label :description, t("trades.form.labels.item_description", default: "Description"), class: "block text-sm font-medium text-app-strong" %>
-                  <%= item_fields.text_area :description, rows: 4, required: true, placeholder: t("trades.form.hints.item_description", default: "Describe the item, including any notable details."), class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+                  <%= item_fields.text_area :description, rows: 4, required: true, value: "Excellent condition vintage guitar", placeholder: t("trades.form.hints.item_description", default: "Describe the item, including any notable details."), class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
                 </div>
 
                 <div class="grid gap-4 md:grid-cols-2">
@@ -76,7 +76,7 @@
           <div class="grid gap-4 md:grid-cols-2">
             <div>
               <label class="block text-sm font-medium text-app-strong" for="trade_price_dollars"><%= t("trades.form.labels.price", default: "Price (USD)") %></label>
-              <input type="number" name="trade[price_dollars]" id="trade_price_dollars" step="0.01" min="20" max="15000" value="<%= @price_input %>" placeholder="0.00" required class="mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" />
+              <input type="number" name="trade[price_dollars]" id="trade_price_dollars" step="0.01" min="20" max="15000" value="<%= @price_input.presence || '50.00' %>" placeholder="0.00" required class="mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" />
               <p class="mt-1 text-xs text-app-muted"><%= t("trades.form.hints.price", default: "Between $20.00 and $15,000.00") %></p>
             </div>
 

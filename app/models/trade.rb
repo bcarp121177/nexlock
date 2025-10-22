@@ -489,6 +489,7 @@ class Trade < ApplicationRecord
 
   def log_state_change
     audit_logs.create!(
+      account: account,
       actor_id: Current.user&.id,
       action: "state_change",
       from_state: state_before_last_save,

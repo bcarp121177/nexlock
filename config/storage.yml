@@ -6,6 +6,15 @@ local:
   service: Disk
   root: <%= Rails.root.join("storage") %>
 
+development:
+  service: digitalocean_spaces
+
+staging:
+  service: digitalocean_spaces
+
+production:
+  service: digitalocean_spaces
+
 # Use rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)
 # amazon:
 #   service: S3
@@ -15,13 +24,13 @@ local:
 #   bucket: your_own_bucket
 
 # DigitalOcean Spaces is API compatible with S3, so we can use their config and just change the endpoint.  You also need to add the aws-sdk gem to your Gemfile.
-# digitalocean_spaces:
-#   service: S3
-#   access_key_id: <%= Rails.application.credentials.dig(:digitalocean_spaces, :access_key_id) %>
-#   secret_access_key: <%= Rails.application.credentials.dig(:digitalocean_spaces, :secret_access_key) %>
-#   region: us-east-1
-#   endpoint: 'https://nyc3.digitaloceanspaces.com'
-#   bucket: your_own_bucket_name
+digitalocean_spaces:
+   service: S3
+   access_key_id: <%= Rails.application.credentials.dig(:digitalocean_spaces, :access_key_id) %>
+   secret_access_key: <%= Rails.application.credentials.dig(:digitalocean_spaces, :secret_access_key) %>
+   region: us-east-1
+   endpoint: 'https://nyc3.digitaloceanspaces.com'
+   bucket: dev-nexlock
 
 # Remember not to checkin your GCS keyfile to a repository
 # google:
