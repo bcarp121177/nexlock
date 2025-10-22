@@ -1,0 +1,79 @@
+<% page_title = t("trades.index.title", default: "Trades") %>
+<% page_subtitle = t("trades.index.subtitle", default: "Monitor every trade through its escrow workflow.") %>
+<% Current.meta_tags.set(title: page_title) %>
+
+<div class="space-y-8">
+  <%= render PageHeaderComponent.new(title: page_title, subtitle: page_subtitle) %>
+
+  <div class="grid gap-4 md:grid-cols-3">
+    <%= render CardComponent.new do %>
+      <p class="text-sm text-app-muted"><%= t("trades.index.metrics.total", default: "Total Trades") %></p>
+      <p class="mt-2 text-3xl font-semibold text-app-strong"><%= @trade_counts[:total] %></p>
+    <% end %>
+
+    <%= render CardComponent.new do %>
+      <p class="text-sm text-app-muted"><%= t("trades.index.metrics.attention", default: "Needs Attention") %></p>
+      <p class="mt-2 text-3xl font-semibold text-app-warning"><%= @trade_counts[:attention] %></p>
+    <% end %>
+
+    <%= render CardComponent.new do %>
+      <p class="text-sm text-app-muted"><%= t("trades.index.metrics.completed", default: "Completed") %></p>
+      <p class="mt-2 text-3xl font-semibold text-app-success"><%= @trade_counts[:completed] %></p>
+    <% end %>
+  </div>
+
+  <%= render CardComponent.new(class_name: "app-card-flush") do %>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-[color:var(--app-border-subtle)] text-left">
+        <thead class="bg-app-muted text-sm text-app-muted uppercase tracking-wide">
+          <tr>
+            <th scope="col" class="px-6 py-3 font-medium"><%= t("trades.index.table.trade", default: "Trade") %></th>
+            <th scope="col" class="px-6 py-3 font-medium"><%= t("trades.index.table.state", default: "State") %></th>
+            <th scope="col" class="px-6 py-3 font-medium"><%= t("trades.index.table.price", default: "Amount") %></th>
+            <th scope="col" class="px-6 py-3 font-medium"><%= t("trades.index.table.updated", default: "Updated") %></th>
+            <th scope="col" class="px-6 py-3 font-medium"><span class="sr-only"><%= t("actions", default: "Actions") %></span></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[color:var(--app-border-subtle)] text-sm">
+          <% if @trades.any? %>
+            <% @trades.each do |trade| %>
+              <tr class="transition hover:bg-[color:var(--app-surface-muted)]">
+                <td class="px-6 py-4">
+                  <p class="font-medium text-app-strong"><%= trade.item&.name || t("trades.index.table.untitled", default: "Untitled Trade") %></p>
+                  <p class="text-xs text-app-muted">
+                    <%= t("trades.index.table.parties", default: "Seller: %{seller} · Buyer: %{buyer}", seller: trade.seller.name, buyer: trade.buyer&.name || trade.buyer_email || t("trades.index.table.unassigned", default: "Unassigned")) %>
+                  </p>
+                </td>
+                <td class="px-6 py-4">
+                  <%= trade_state_badge(trade) %>
+                </td>
+                <td class="px-6 py-4 text-app-strong">
+                  <%= trade_price(trade) %>
+                </td>
+                <td class="px-6 py-4 text-app-muted">
+                  <%= l(trade.updated_at, format: :short) %>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <%= link_to t("trades.index.table.view", default: "View"), "#", class: "text-sm font-medium text-app-accent hover:underline" %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="5" class="px-6 py-10 text-center text-app-muted">
+                <p class="text-base font-medium"><%= t("trades.index.empty.title", default: "No trades yet") %></p>
+                <p class="mt-1 text-sm"><%= t("trades.index.empty.subtitle", default: "Create a trade to start the escrow workflow.") %></p>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if defined?(@pagy) && @pagy.last > 1 %>
+      <div class="px-6 py-4 border-t border-[color:var(--app-border-subtle)] text-center">
+        <%== @pagy.series_nav %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

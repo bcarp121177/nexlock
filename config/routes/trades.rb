@@ -1,0 +1,1 @@
+resources :trades, only: [:index]

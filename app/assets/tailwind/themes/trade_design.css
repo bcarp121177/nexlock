@@ -1,0 +1,65 @@
+@layer theme {
+  :root {
+    /* Typography */
+    --app-text-strong: var(--base-text);
+    --app-text-body: var(--base-text-secondary);
+    --app-text-muted: var(--base-text-tertiary);
+    --app-text-placeholder: var(--base-text-disabled);
+    --app-text-inverse: var(--text-on-primary);
+    --app-text-accent: var(--text-primary);
+    --app-text-success: var(--text-success);
+    --app-text-danger: var(--text-danger);
+    --app-text-warning: var(--text-on-warning-secondary);
+
+    /* Surfaces */
+    --app-surface-page: var(--base-bg-low);
+    --app-surface-muted: var(--base-bg-base);
+    --app-surface-card: var(--base-bg-lowest);
+    --app-surface-elevated: var(--base-bg-high);
+    --app-surface-backdrop: rgba(15, 23, 42, 0.45);
+
+    /* Borders */
+    --app-border-subtle: var(--base-border-tertiary);
+    --app-border-strong: var(--base-border-secondary);
+    --app-border-focus: var(--base-border-focus);
+
+    /* Accent & Status */
+    --app-accent-bg: var(--bg-primary);
+    --app-accent-bg-hover: var(--bg-primary-hover);
+    --app-accent-text: var(--text-on-primary);
+    --app-accent-border: var(--border-primary);
+
+    --app-accent-soft-bg: var(--base-bg-hover);
+    --app-accent-soft-text: var(--text-primary);
+
+    --app-success-bg: var(--bg-success);
+    --app-success-soft-bg: var(--bg-success-secondary);
+    --app-success-soft-text: var(--text-on-success-secondary);
+
+    --app-danger-bg: var(--bg-danger);
+    --app-danger-soft-bg: var(--bg-danger-secondary);
+    --app-danger-soft-text: var(--text-on-danger-secondary);
+
+    --app-warning-soft-bg: var(--bg-warning-secondary);
+    --app-warning-soft-text: var(--text-on-warning-secondary);
+
+    --app-info-soft-bg: var(--bg-info-secondary);
+    --app-info-soft-text: var(--text-on-info-secondary);
+
+    /* Layout */
+    --app-spacing-2: 0.5rem;
+    --app-spacing-3: 0.75rem;
+    --app-spacing-4: 1rem;
+    --app-spacing-5: 1.25rem;
+    --app-spacing-6: 1.5rem;
+    --app-spacing-8: 2rem;
+
+    --app-radius-sm: 0.5rem;
+    --app-radius-md: 0.75rem;
+    --app-radius-lg: 1rem;
+    --app-radius-full: 9999px;
+
+    --app-shadow-soft: 0 12px 24px -18px rgba(15, 23, 42, 0.25);
+    --app-shadow-card: 0 18px 40px -24px rgba(15, 23, 42, 0.25);
+  }
+}

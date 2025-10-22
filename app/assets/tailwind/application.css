@@ -19,6 +19,7 @@
 @import "./themes/light.css" layer(theme);
 @import "./themes/jumpstart-dark.css" layer(theme);
 @import "./themes/jumpstart.css" layer(theme);
+@import "./themes/trade_design.css" layer(theme);
 
 @import "./components/base.css" layer(components);
 @import "./components/actiontext.css" layer(components);
@@ -44,3 +45,4 @@
 @import "./components/typography.css" layer(components);
 @import "./components/wells.css" layer(components);
 @import "./components/braintree.css" layer(components);
+@import "./components/design_system.css" layer(components);

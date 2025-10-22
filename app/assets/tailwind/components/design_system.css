@@ -1,0 +1,189 @@
+@layer utilities {
+  /* Typography */
+  .text-app-strong {
+    color: var(--app-text-strong);
+  }
+
+  .text-app-body {
+    color: var(--app-text-body);
+  }
+
+  .text-app-muted {
+    color: var(--app-text-muted);
+  }
+
+  .text-app-placeholder {
+    color: var(--app-text-placeholder);
+  }
+
+  .text-app-inverse {
+    color: var(--app-text-inverse);
+  }
+
+  .text-app-accent {
+    color: var(--app-text-accent);
+  }
+
+  .text-app-success {
+    color: var(--app-text-success);
+  }
+
+  .text-app-danger {
+    color: var(--app-text-danger);
+  }
+
+  .text-app-warning {
+    color: var(--app-text-warning);
+  }
+
+  /* Surfaces */
+  .bg-app-page {
+    background-color: var(--app-surface-page);
+  }
+
+  .bg-app-card {
+    background-color: var(--app-surface-card);
+  }
+
+  .bg-app-muted {
+    background-color: var(--app-surface-muted);
+  }
+
+  .bg-app-elevated {
+    background-color: var(--app-surface-elevated);
+  }
+
+  /* Borders */
+  .border-app-subtle {
+    border-color: var(--app-border-subtle);
+  }
+
+  .border-app-strong {
+    border-color: var(--app-border-strong);
+  }
+
+  .ring-app-focus {
+    --tw-ring-color: var(--app-border-focus);
+    --tw-ring-offset-color: var(--app-surface-card);
+  }
+
+  /* Cards */
+  .app-card {
+    background-color: var(--app-surface-card);
+    border: 1px solid var(--app-border-subtle);
+    border-radius: var(--app-radius-lg);
+    padding: var(--app-spacing-4);
+    box-shadow: var(--app-shadow-card);
+  }
+
+  @media (min-width: 768px) {
+    .app-card {
+      padding: var(--app-spacing-6);
+    }
+  }
+
+  .app-card-muted {
+    background-color: var(--app-surface-muted);
+  }
+
+  .app-card-outline {
+    border-color: var(--app-border-strong);
+    box-shadow: var(--app-shadow-soft);
+  }
+
+  .app-card-flush {
+    padding: 0;
+  }
+
+  /* Buttons */
+  .btn-app-primary {
+    @apply inline-flex items-center justify-center gap-2 font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+    padding: var(--app-spacing-2) var(--app-spacing-4);
+    border-radius: var(--app-radius-md);
+    background-color: var(--app-accent-bg);
+    color: var(--app-accent-text);
+    border: 1px solid var(--app-accent-border);
+    box-shadow: var(--app-shadow-soft);
+    --tw-ring-color: var(--app-border-focus);
+    --tw-ring-offset-color: var(--app-surface-card);
+  }
+
+  .btn-app-primary:hover {
+    background-color: var(--app-accent-bg-hover);
+  }
+
+  .btn-app-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .btn-app-secondary {
+    @apply inline-flex items-center justify-center gap-2 font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2;
+    padding: var(--app-spacing-2) var(--app-spacing-4);
+    border-radius: var(--app-radius-md);
+    background-color: transparent;
+    color: var(--app-text-strong);
+    border: 1px solid var(--app-border-strong);
+    box-shadow: none;
+    --tw-ring-color: var(--app-border-focus);
+    --tw-ring-offset-color: var(--app-surface-card);
+  }
+
+  .btn-app-secondary:hover {
+    background-color: var(--app-accent-soft-bg);
+    color: var(--app-accent-soft-text);
+  }
+
+  .btn-app-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Badges */
+  .badge-app {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.2rem 0.75rem;
+    border-radius: var(--app-radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    background-color: var(--app-accent-soft-bg);
+    color: var(--app-accent-soft-text);
+  }
+
+  .badge-app-success {
+    background-color: var(--app-success-soft-bg);
+    color: var(--app-success-soft-text);
+  }
+
+  .badge-app-danger {
+    background-color: var(--app-danger-soft-bg);
+    color: var(--app-danger-soft-text);
+  }
+
+  .badge-app-warning {
+    background-color: var(--app-warning-soft-bg);
+    color: var(--app-warning-soft-text);
+  }
+
+  .badge-app-info {
+    background-color: var(--app-info-soft-bg);
+    color: var(--app-info-soft-text);
+  }
+
+  /* Utility wrappers */
+  .app-section {
+    background-color: var(--app-surface-page);
+    padding: var(--app-spacing-4);
+    border-radius: var(--app-radius-lg);
+  }
+
+  @media (min-width: 1024px) {
+    .app-section {
+      padding: var(--app-spacing-6);
+    }
+  }
+}
