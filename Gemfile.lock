@@ -7,6 +7,8 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
+    aasm (5.5.1)
+      concurrent-ruby (~> 1.0)
     action_text-trix (2.1.15)
       railties
     actioncable (8.1.0.rc1)
@@ -537,6 +539,7 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
+  aasm
   action_text-trix (~> 2.1)
   bootsnap (>= 1.4.2)
   brakeman
@@ -590,6 +593,7 @@ DEPENDENCIES
   webmock
 
 CHECKSUMS
+  aasm (5.5.1) sha256=8cd7d59f43bf52d2e1bafcbf30b11de3b66a82d92f69a11ea3bc5a1898e1bce1
   action_text-trix (2.1.15) sha256=4bf9bbd8fa95954de3f0022dae0d927bce22c1bb31d5dc9c3766f8c145c109c1
   actioncable (8.1.0.rc1) sha256=801e738c7408fb6ed0820f509661941235c4bb7dcbfec07cbffc5b0caf56f9a5
   actionmailbox (8.1.0.rc1) sha256=964232662ca0bb1832a876b185578de302efa6f615a7570cc20a875d0e00bb73

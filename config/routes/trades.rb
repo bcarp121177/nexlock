@@ -1,1 +1,1 @@
-resources :trades, only: [:index]
+resources :trades, only: [:index, :new, :create]

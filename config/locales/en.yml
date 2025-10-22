@@ -245,6 +245,64 @@ en:
       invalid_business_type: "Invalid business type"
       invalid_redirect: "Unable to start onboarding. Contact support."
       start_failed: "Unable to start onboarding."
+
+  trades:
+    index:
+      title: "Trades"
+      subtitle: "Monitor every trade through its escrow workflow."
+      metrics:
+        total: "Total Trades"
+        attention: "Needs Attention"
+        completed: "Completed"
+      table:
+        trade: "Trade"
+        state: "State"
+        price: "Amount"
+        updated: "Updated"
+        view: "View"
+        untitled: "Untitled Trade"
+        unassigned: "Unassigned"
+        parties: "Seller: %{seller} · Buyer: %{buyer}"
+    new:
+      title: "Create Trade"
+      subtitle: "Draft a new escrow trade for your buyer."
+      back: "Back to trades"
+    create:
+      success: "Trade draft created."
+    form:
+      errors:
+        heading: "Please fix the following"
+        price_invalid: "Enter a valid price"
+        price_range: "Price must be between $20.00 and $15,000.00"
+      sections:
+        buyer: "Buyer Information"
+        item: "Item Details"
+        terms: "Trade Terms"
+      labels:
+        buyer_email: "Buyer email address"
+        item_name: "Item name"
+        item_description: "Description"
+        item_category: "Category"
+        item_condition: "Condition"
+        price: "Price (USD)"
+        inspection: "Inspection window"
+        fee_split: "Who pays the platform fee?"
+      hints:
+        buyer_email: "We'll invite this buyer to review and agree to the trade."
+        item_description: "Describe the item, including any notable details."
+        price: "Between $20.00 and $15,000.00"
+        inspection: "How long the buyer has to inspect the item after delivery"
+        fee_split: "Estimated platform fee: %{fee_percent}% (~%{fee_amount})"
+      options:
+        hours: "%{hours} hours"
+        days: "%{days} days"
+      fee_split:
+        buyer: "Buyer pays"
+        seller: "Seller pays"
+        split: "Split 50/50"
+      actions:
+        cancel: "Cancel"
+        submit: "Create Trade"
       confirm_description: "Extra confirmation is needed to process your payment. Please confirm your payment by filling out your payment details below."
       back: "Go back"
       confirm_button: "Confirm Payment"

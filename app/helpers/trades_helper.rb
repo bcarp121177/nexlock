@@ -1,4 +1,8 @@
+require "bigdecimal"
+
 module TradesHelper
+  PLATFORM_FEE_PERCENT = 2.5
+
   STATE_BADGE_VARIANTS = {
     draft: :info,
     awaiting_seller_signature: :warning,
@@ -34,5 +38,18 @@ module TradesHelper
 
   def trade_price(trade)
     number_to_currency(trade.price)
+  end
+
+  def estimated_platform_fee(price_input)
+    price = begin
+      BigDecimal(price_input.to_s)
+    rescue ArgumentError
+      0
+    end
+
+    fee = price * (PLATFORM_FEE_PERCENT / 100.0)
+    fee = 5 if fee < 5
+    fee = 150 if fee > 150
+    fee.round(2)
   end
 end
