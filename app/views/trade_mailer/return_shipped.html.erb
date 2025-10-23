@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #f59e0b;">Return Shipment In Transit</h2>
+
+    <p>Hi <%= @recipient.name %>,</p>
+
+    <p>The buyer has shipped the return for Trade #<%= @trade.id %>.</p>
+
+    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+      <h3 style="margin-top: 0;">Shipment Details</h3>
+      <p><strong>Item:</strong> <%= @trade.item&.name %></p>
+      <% if @shipment&.tracking_number.present? %>
+        <p><strong>Tracking Number:</strong> <%= @shipment.tracking_number %></p>
+        <% if @shipment.carrier.present? %>
+          <p><strong>Carrier:</strong> <%= @shipment.carrier.titleize %></p>
+        <% end %>
+      <% end %>
+    </div>
+
+    <p><strong>Next Steps:</strong></p>
+    <ul>
+      <li>Watch for the package to arrive</li>
+      <li>Confirm receipt when it arrives</li>
+      <li>Inspect the item carefully</li>
+      <li>Accept or reject the return based on its condition</li>
+    </ul>
+
+    <div style="margin: 30px 0;">
+      <%= link_to "Track Return", trade_url(@trade), style: "display: inline-block; background-color: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;" %>
+    </div>
+
+    <p style="color: #6b7280; font-size: 14px;">
+      Once you receive and accept the return, a refund will be issued to the buyer.
+    </p>
+  </div>
+</body>
+</html>

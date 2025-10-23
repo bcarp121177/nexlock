@@ -1,6 +1,6 @@
 # Configures Noticed to be scoped by account
 ActiveSupport.on_load :noticed_event do
-  belongs_to :account
+  belongs_to :account, optional: true
 
   # Set account association from params
   def self.with(params)
@@ -12,11 +12,12 @@ ActiveSupport.on_load :noticed_event do
   end
 
   def recipient_attributes_for(recipient)
-    super.merge(account_id: account&.id || recipient.personal_account&.id)
+    account_id = account&.id || recipient&.personal_account&.id
+    super.merge(account_id: account_id)
   end
 end
 
 ActiveSupport.on_load :noticed_notification do
-  belongs_to :account
+  belongs_to :account, optional: true
   delegate :message, to: :event
 end

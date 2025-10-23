@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #10b981;">Dispute Resolved</h2>
+
+    <p>Hi <%= @recipient.name %>,</p>
+
+    <p>The dispute for Trade #<%= @trade.id %> has been resolved.</p>
+
+    <div style="background-color: #ecfdf5; padding: 15px; border-radius: 5px; border-left: 4px solid #10b981; margin: 20px 0;">
+      <h3 style="margin-top: 0; color: #10b981;">Decision: Funds Released to Seller</h3>
+      <p><strong>Item:</strong> <%= @trade.item&.name %></p>
+      <p><strong>Amount:</strong> <%= number_to_currency(@trade.price / 100.0) %></p>
+    </div>
+
+    <% if @recipient == @trade.seller %>
+      <p>After reviewing the evidence from both parties, we've determined that the funds should be released to you.</p>
+
+      <p><strong>What This Means:</strong></p>
+      <ul>
+        <li>The full payment will be transferred to your account</li>
+        <li>You should receive the funds within 2-3 business days</li>
+        <li>The trade is now complete</li>
+      </ul>
+    <% else %>
+      <p>After reviewing the evidence from both parties, we've determined that the seller's position is valid.</p>
+
+      <p><strong>What This Means:</strong></p>
+      <ul>
+        <li>The payment will be released to the seller</li>
+        <li>No refund will be issued</li>
+        <li>The trade is now complete</li>
+      </ul>
+    <% end %>
+
+    <div style="margin: 30px 0;">
+      <%= link_to "View Trade Details", trade_url(@trade), style: "display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;" %>
+    </div>
+
+    <p style="color: #6b7280; font-size: 14px;">
+      If you have questions about this decision, please contact our support team.
+    </p>
+  </div>
+</body>
+</html>

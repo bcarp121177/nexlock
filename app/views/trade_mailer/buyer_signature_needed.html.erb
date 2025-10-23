@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #3b82f6;">Agreement Ready for Your Signature</h2>
+
+    <p>Hi <%= @recipient.name %>,</p>
+
+    <p>The seller has signed the trade agreement for Trade #<%= @trade.id %>. Your signature is now required to proceed.</p>
+
+    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+      <h3 style="margin-top: 0;">Trade Details</h3>
+      <p><strong>Item:</strong> <%= @trade.item&.name %></p>
+      <p><strong>Amount:</strong> <%= number_to_currency(@trade.price / 100.0) %></p>
+      <p><strong>Seller:</strong> <%= @trade.seller.name %></p>
+    </div>
+
+    <% if @trade_document&.expires_at.present? %>
+      <div style="background-color: #fef3c7; padding: 15px; border-left: 4px solid #f59e0b; margin: 20px 0;">
+        <p style="margin: 0;"><strong>⏰ Signature Deadline:</strong> <%= l(@trade_document.expires_at, format: :long) %></p>
+        <p style="margin: 5px 0 0 0; font-size: 14px;">The agreement must be signed before this deadline or the trade will be cancelled.</p>
+      </div>
+    <% end %>
+
+    <p><strong>What You Need to Do:</strong></p>
+    <ul>
+      <li>Review the trade agreement carefully</li>
+      <li>Verify all details are correct</li>
+      <li>Sign the agreement electronically</li>
+      <li>After signing, you'll be able to fund the escrow</li>
+    </ul>
+
+    <div style="margin: 30px 0;">
+      <% if @trade_document.present? %>
+        <%= link_to "Sign Agreement Now", signing_url_trade_url(@trade), style: "display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;" %>
+      <% else %>
+        <%= link_to "View Trade", trade_url(@trade), style: "display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;" %>
+      <% end %>
+    </div>
+
+    <p style="color: #6b7280; font-size: 14px;">
+      The trade agreement protects both parties and outlines the terms of this transaction. Please review it carefully before signing.
+    </p>
+  </div>
+</body>
+</html>

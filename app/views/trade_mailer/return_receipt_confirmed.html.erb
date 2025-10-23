@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #3b82f6;">Return Received - Inspection Started</h2>
+
+    <p>Hi <%= @recipient.name %>,</p>
+
+    <p>The seller has confirmed receipt of your return for Trade #<%= @trade.id %>. They are now inspecting the item.</p>
+
+    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+      <h3 style="margin-top: 0;">Trade Details</h3>
+      <p><strong>Item:</strong> <%= @trade.item&.name %></p>
+      <p><strong>Return Amount:</strong> <%= number_to_currency(@trade.price / 100.0) %></p>
+    </div>
+
+    <p><strong>What Happens Next:</strong></p>
+    <ul>
+      <li>The seller will inspect the returned item</li>
+      <li>If accepted, your refund will be processed automatically</li>
+      <li>If rejected, the seller must provide a reason and evidence</li>
+      <li>You'll be notified once a decision is made</li>
+    </ul>
+
+    <div style="margin: 30px 0;">
+      <%= link_to "View Trade Status", trade_url(@trade), style: "display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;" %>
+    </div>
+
+    <p style="color: #6b7280; font-size: 14px;">
+      We'll email you as soon as the seller makes their decision.
+    </p>
+  </div>
+</body>
+</html>

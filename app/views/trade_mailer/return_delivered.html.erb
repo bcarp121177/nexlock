@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #f59e0b;">Return Package Delivered</h2>
+
+    <p>Hi <%= @recipient.name %>,</p>
+
+    <p>The return package for Trade #<%= @trade.id %> has been delivered to your address.</p>
+
+    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+      <h3 style="margin-top: 0;">Trade Details</h3>
+      <p><strong>Item:</strong> <%= @trade.item&.name %></p>
+      <p><strong>Amount:</strong> <%= number_to_currency(@trade.price / 100.0) %></p>
+    </div>
+
+    <p style="background-color: #fef3c7; padding: 15px; border-left: 4px solid #f59e0b; margin: 20px 0;">
+      <strong>Action Required:</strong> Please confirm receipt of the return package to begin the inspection process.
+    </p>
+
+    <p><strong>Next Steps:</strong></p>
+    <ul>
+      <li>Locate and retrieve the package</li>
+      <li>Confirm receipt in the platform</li>
+      <li>Inspect the returned item carefully</li>
+      <li>Accept or reject the return based on condition</li>
+    </ul>
+
+    <div style="margin: 30px 0;">
+      <%= link_to "Confirm Receipt", trade_url(@trade), style: "display: inline-block; background-color: #f59e0b; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;" %>
+    </div>
+
+    <p style="color: #6b7280; font-size: 14px;">
+      The refund is on hold until you confirm receipt and accept the return.
+    </p>
+  </div>
+</body>
+</html>

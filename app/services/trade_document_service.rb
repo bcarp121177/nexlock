@@ -143,20 +143,36 @@ class TradeDocumentService
 
     # Check for expired signature deadlines (called by background job)
     def check_signature_deadlines
+      # Check for expired deadlines
       expired_trades = Trade.where(
         state: [:awaiting_seller_signature, :awaiting_buyer_signature]
       ).where("signature_deadline_at <= ?", Time.current)
 
-      count = 0
+      expired_count = 0
       expired_trades.find_each do |trade|
         if trade.may_signature_deadline_expired?
           trade.signature_deadline_expired!
           Rails.logger.info "Trade #{trade.id} signature deadline expired"
-          count += 1
+          expired_count += 1
         end
       end
 
-      { expired_count: count }
+      # Send reminders for deadlines expiring within 24 hours
+      reminder_deadline = 24.hours.from_now
+      upcoming_trades = Trade.where(
+        state: [:awaiting_seller_signature, :awaiting_buyer_signature]
+      ).where("signature_deadline_at > ? AND signature_deadline_at <= ?", Time.current, reminder_deadline)
+
+      reminder_count = 0
+      upcoming_trades.find_each do |trade|
+        # Check if we've already sent a reminder (using a flag or checking created_at)
+        # For now, we'll send it every time the job runs (which should be daily)
+        trade.notify_signature_deadline_reminder
+        Rails.logger.info "Sent signature deadline reminder for trade #{trade.id}"
+        reminder_count += 1
+      end
+
+      { expired_count: expired_count, reminder_count: reminder_count }
     end
 
     private

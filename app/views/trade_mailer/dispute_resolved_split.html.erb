@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #10b981;">Dispute Resolved</h2>
+
+    <p>Hi <%= @recipient.name %>,</p>
+
+    <p>The dispute for Trade #<%= @trade.id %> has been resolved with a partial refund.</p>
+
+    <div style="background-color: #ecfdf5; padding: 15px; border-radius: 5px; border-left: 4px solid #10b981; margin: 20px 0;">
+      <h3 style="margin-top: 0; color: #10b981;">Decision: Partial Refund</h3>
+      <p><strong>Item:</strong> <%= @trade.item&.name %></p>
+      <p><strong>Total Amount:</strong> <%= number_to_currency(@trade.price / 100.0) %></p>
+    </div>
+
+    <p>After reviewing the evidence from both parties, we've determined that both parties share some responsibility. The payment will be split.</p>
+
+    <% if @recipient == @trade.buyer %>
+      <p><strong>What This Means for You:</strong></p>
+      <ul>
+        <li>You'll receive a partial refund</li>
+        <li>The refund will be processed to your original payment method</li>
+        <li>You should see the refund within 5-10 business days</li>
+        <li>The trade is now complete</li>
+      </ul>
+    <% else %>
+      <p><strong>What This Means for You:</strong></p>
+      <ul>
+        <li>You'll receive a partial payment</li>
+        <li>The payment will be transferred to your account</li>
+        <li>You should receive the funds within 2-3 business days</li>
+        <li>The trade is now complete</li>
+      </ul>
+    <% end %>
+
+    <div style="margin: 30px 0;">
+      <%= link_to "View Trade Details", trade_url(@trade), style: "display: inline-block; background-color: #10b981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;" %>
+    </div>
+
+    <p style="color: #6b7280; font-size: 14px;">
+      If you have questions about this decision, please contact our support team.
+    </p>
+  </div>
+</body>
+</html>

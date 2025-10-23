@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #ef4444;">Return Rejected - Dispute Opened</h2>
+
+    <p>Hi <%= @recipient.name %>,</p>
+
+    <p>The seller has rejected your return for Trade #<%= @trade.id %> and a dispute case has been opened.</p>
+
+    <div style="background-color: #fef2f2; padding: 15px; border-radius: 5px; border-left: 4px solid #ef4444; margin: 20px 0;">
+      <h3 style="margin-top: 0; color: #ef4444;">Dispute Case Opened</h3>
+      <p><strong>Item:</strong> <%= @trade.item&.name %></p>
+      <p><strong>Amount:</strong> <%= number_to_currency(@trade.price / 100.0) %></p>
+      <% if @support_request.present? %>
+        <p><strong>Dispute ID:</strong> #<%= @support_request.id %></p>
+      <% end %>
+    </div>
+
+    <% if @support_request.present? %>
+      <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <h4 style="margin-top: 0;">Seller's Reason for Rejection</h4>
+        <% first_message = @support_request.support_messages.order(created_at: :asc).first %>
+        <% if first_message %>
+          <p style="white-space: pre-wrap;"><%= first_message.body %></p>
+        <% end %>
+      </div>
+    <% end %>
+
+    <p><strong>What Happens Next:</strong></p>
+    <ul>
+      <li>Our support team will review the case</li>
+      <li>Both parties can provide additional evidence</li>
+      <li>You can respond to the seller's claims</li>
+      <li>A decision will be made within 7 business days</li>
+    </ul>
+
+    <div style="margin: 30px 0;">
+      <% if @support_request.present? %>
+        <%= link_to "View Dispute Case", support_request_url(@support_request), style: "display: inline-block; background-color: #ef4444; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; margin-right: 10px;" %>
+      <% end %>
+      <%= link_to "View Trade", trade_url(@trade), style: "display: inline-block; background-color: #6b7280; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;" %>
+    </div>
+
+    <p style="color: #6b7280; font-size: 14px;">
+      The funds will remain in escrow until the dispute is resolved. Please provide any evidence that supports your case.
+    </p>
+  </div>
+</body>
+</html>

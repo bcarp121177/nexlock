@@ -104,13 +104,13 @@ class Trade < ApplicationRecord
     event :seller_signs do
       transitions from: :awaiting_seller_signature,
                   to: :awaiting_buyer_signature,
-                  after: [:record_seller_signature, :notify_buyer_to_sign]
+                  after: [:record_seller_signature, :notify_buyer_to_sign, :notify_buyer_signature_needed]
     end
 
     event :buyer_signs do
       transitions from: :awaiting_buyer_signature,
                   to: :awaiting_funding,
-                  after: [:record_buyer_signature, :finalize_agreement]
+                  after: [:record_buyer_signature, :finalize_agreement, :notify_funding_required]
     end
 
     event :signature_deadline_expired do
@@ -148,7 +148,7 @@ class Trade < ApplicationRecord
     end
 
     event :confirm_receipt do
-      transitions from: :delivered_pending_confirmation, to: :inspection, after: :start_inspection_window
+      transitions from: :delivered_pending_confirmation, to: :inspection, after: %i[start_inspection_window notify_receipt_confirmed]
     end
 
     event :auto_confirm_receipt do
@@ -168,15 +168,15 @@ class Trade < ApplicationRecord
     end
 
     event :mark_return_shipped do
-      transitions from: :rejected, to: :return_in_transit
+      transitions from: :rejected, to: :return_in_transit, after: :notify_return_shipped
     end
 
     event :mark_return_delivered do
-      transitions from: :return_in_transit, to: :return_delivered_pending_confirmation
+      transitions from: :return_in_transit, to: :return_delivered_pending_confirmation, after: :notify_return_delivered
     end
 
     event :confirm_return_receipt do
-      transitions from: :return_delivered_pending_confirmation, to: :return_inspection, after: :start_return_inspection_window
+      transitions from: :return_delivered_pending_confirmation, to: :return_inspection, after: %i[start_return_inspection_window notify_return_receipt_confirmed]
     end
 
     event :accept_return do
@@ -184,7 +184,7 @@ class Trade < ApplicationRecord
     end
 
     event :reject_return do
-      transitions from: :return_inspection, to: :disputed
+      transitions from: :return_inspection, to: :disputed, after: :notify_return_rejected
     end
 
     event :refund do
@@ -210,15 +210,15 @@ class Trade < ApplicationRecord
     end
 
     event :resolve_with_release do
-      transitions from: :disputed, to: :resolved_release, after: :execute_release_payout
+      transitions from: :disputed, to: :resolved_release, after: %i[execute_release_payout notify_dispute_resolved_release]
     end
 
     event :resolve_with_refund do
-      transitions from: :disputed, to: :resolved_refund, after: :execute_refund
+      transitions from: :disputed, to: :resolved_refund, after: %i[execute_refund notify_dispute_resolved_refund]
     end
 
     event :resolve_with_split do
-      transitions from: :disputed, to: :resolved_split, after: :execute_split_payout
+      transitions from: :disputed, to: :resolved_split, after: %i[execute_split_payout notify_dispute_resolved_split]
     end
   end
 
@@ -404,6 +404,51 @@ class Trade < ApplicationRecord
 
   def notify_refund_processed
     NotificationService.send_refund_processed(self)
+  end
+
+  def notify_receipt_confirmed
+    NotificationService.send_receipt_confirmed(self)
+  end
+
+  def notify_return_shipped
+    NotificationService.send_return_shipped(self)
+  end
+
+  def notify_return_delivered
+    NotificationService.send_return_delivered(self)
+  end
+
+  def notify_return_receipt_confirmed
+    NotificationService.send_return_receipt_confirmed(self)
+  end
+
+  def notify_return_rejected
+    NotificationService.send_return_rejected(self)
+  end
+
+  def notify_dispute_resolved_release
+    NotificationService.send_dispute_resolved_release(self)
+  end
+
+  def notify_dispute_resolved_refund
+    NotificationService.send_dispute_resolved_refund(self)
+  end
+
+  def notify_dispute_resolved_split
+    NotificationService.send_dispute_resolved_split(self)
+  end
+
+  def notify_buyer_signature_needed
+    Rails.logger.info "*** notify_buyer_signature_needed called for trade #{id}, buyer present: #{buyer.present?}"
+    NotificationService.send_buyer_signature_needed(self)
+  end
+
+  def notify_funding_required
+    NotificationService.send_funding_required(self)
+  end
+
+  def notify_signature_deadline_reminder
+    NotificationService.send_signature_deadline_reminder(self)
   end
 
   def schedule_ship_by_timer
