@@ -14,7 +14,6 @@ Rails.application.config.after_initialize do
 
   missing = []
   missing << "api_key" if config.api_key.blank?
-  missing << "trade_agreement_template_id" if config.trade_agreement_template_id.blank?
   missing << "webhook_secret" if config.webhook_secret.blank? && Rails.env.production?
 
   if missing.any?
@@ -30,7 +29,7 @@ Rails.application.config.after_initialize do
   else
     Rails.logger.info "✓ DocuSeal configured successfully"
     Rails.logger.info "  - API URL: #{config.api_url}"
-    Rails.logger.info "  - Template ID: #{config.trade_agreement_template_id}"
+    Rails.logger.info "  - Using Prawn PDF generation with text tags"
     Rails.logger.info "  - Webhook secret: #{config.webhook_secret.present? ? "configured" : "not configured"}"
   end
 end

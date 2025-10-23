@@ -21,6 +21,7 @@ gem "stimulus-rails", "~> 1.0", ">= 1.0.2"
 gem "jbuilder", "~> 2.14"
 gem "aasm"
 gem "faraday", "~> 2.7"
+gem "prawn", "~> 2.5"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"

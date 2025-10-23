@@ -42,6 +42,59 @@ class DocusealService
       { success: false, error: e.message }
     end
 
+    # Create submission from generated PDF with embedded text tags
+    def create_submission_from_pdf(trade:, pdf_data:)
+      config = Rails.application.config.x.docuseal
+      return { success: false, error: "DocuSeal API key not configured" } unless config.api_key
+
+      Rails.logger.info "=" * 80
+      Rails.logger.info "DocuSeal Submission from PDF for Trade ##{trade.id}"
+      Rails.logger.info "=" * 80
+      Rails.logger.info "PDF Size: #{(pdf_data.bytesize / 1024.0).round(2)} KB"
+      Rails.logger.info "Submitters: Seller (#{trade.seller.email}), Buyer (#{trade.buyer_email})"
+      Rails.logger.info "=" * 80
+
+      response = connection.post("/submissions/pdf") do |req|
+        req.body = {
+          name: "Trade Agreement ##{trade.id}",
+          documents: [{
+            name: "trade_agreement_#{trade.id}.pdf",
+            file: Base64.strict_encode64(pdf_data)
+          }],
+          submitters: [
+            {
+              role: "Seller",
+              email: trade.seller.email,
+              name: trade.seller_name || trade.seller.name
+            },
+            {
+              role: "Buyer",
+              email: trade.buyer_email,
+              name: trade.buyer_name || trade.buyer_email.split("@").first.titleize
+            }
+          ],
+          send_email: false,  # We handle emails ourselves
+          order: "preserved"  # Sequential signing: Seller → Buyer
+        }
+      end
+
+      result = parse_response(response)
+
+      if result[:success]
+        Rails.logger.info "✅ DocuSeal submission created: ID #{result[:data]['id']}"
+      else
+        Rails.logger.error "❌ DocuSeal submission failed: #{result[:error]}"
+      end
+
+      result
+    rescue Faraday::Error => e
+      Rails.logger.error "DocuSeal API error: #{e.message}"
+      { success: false, error: e.message }
+    rescue => e
+      Rails.logger.error "Unexpected error in create_submission_from_pdf: #{e.message}"
+      { success: false, error: e.message }
+    end
+
     # Get embedded signing URL for a specific submitter
     def get_embedded_signing_url(submitter_id)
       config = Rails.application.config.x.docuseal

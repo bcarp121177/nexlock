@@ -597,6 +597,7 @@ DEPENDENCIES
   pagy (~> 43.0.0.rc2)
   pay (~> 11.0)
   pg
+  prawn (~> 2.5)
   prefixed_ids (~> 1.2)
   pretender (~> 0.4)
   propshaft (~> 1.0)

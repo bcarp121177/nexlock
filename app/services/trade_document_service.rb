@@ -4,20 +4,24 @@ class TradeDocumentService
   class << self
     # Create trade agreement document and initiate DocuSeal submission
     def create_trade_agreement(trade)
-      # Create submission in DocuSeal
-      result = DocusealService.create_submission(trade: trade)
+      # Generate PDF with Prawn
+      Rails.logger.info "Generating trade agreement PDF for Trade ##{trade.id}"
+      pdf_data = TradeAgreementPdfGenerator.generate(trade)
+
+      # Create submission in DocuSeal with generated PDF
+      result = DocusealService.create_submission_from_pdf(trade: trade, pdf_data: pdf_data)
 
       return result unless result[:success]
 
       submission_data = result[:data]
 
-      # DocuSeal API returns an ARRAY of submitters, not a submission object
-      submitters = submission_data.is_a?(Array) ? submission_data : [submission_data]
+      # Extract submission ID and submitters from response
+      # Response format: { "id": 123, "submitters": [...], ... }
+      submission_id = submission_data["id"]
+      submitters = submission_data["submitters"]
 
-      Rails.logger.info "DocuSeal submitters: #{submitters.inspect}"
-
-      # All submitters share the same submission_id
-      submission_id = submitters.first["submission_id"]
+      Rails.logger.info "DocuSeal submission created: ID #{submission_id}"
+      Rails.logger.info "Submitters: #{submitters.map { |s| "#{s['role']} (#{s['email']})" }.join(", ")}"
 
       # Create trade_documents record
       trade_document = trade.trade_documents.create!(
@@ -25,7 +29,7 @@ class TradeDocumentService
         document_type: :trade_agreement,
         title: "Trade Agreement ##{trade.id}",
         docuseal_submission_id: submission_id.to_s,
-        docuseal_template_id: Rails.application.config.x.docuseal.trade_agreement_template_id.to_s,
+        docuseal_template_id: nil, # No longer using templates
         status: :pending,
         docuseal_document_url: nil, # We'll set this later when completed
         expires_at: trade.signature_deadline_at
