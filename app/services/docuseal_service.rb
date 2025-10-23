@@ -8,12 +8,28 @@ class DocusealService
       return { success: false, error: "DocuSeal API key not configured" } unless config.api_key
       return { success: false, error: "DocuSeal template ID not configured" } unless config.trade_agreement_template_id
 
+      submitters_data = build_submitters(trade)
+
+      Rails.logger.info "=" * 80
+      Rails.logger.info "DocuSeal Submission Data for Trade ##{trade.id}"
+      Rails.logger.info "=" * 80
+      Rails.logger.info "Template ID: #{config.trade_agreement_template_id}"
+      Rails.logger.info "Submitters:"
+      submitters_data.each_with_index do |submitter, index|
+        Rails.logger.info "  #{index + 1}. #{submitter[:role]} (#{submitter[:email]})"
+        Rails.logger.info "     Fields being sent:"
+        submitter[:values].each do |key, value|
+          Rails.logger.info "       - #{key}: #{value}"
+        end
+      end
+      Rails.logger.info "=" * 80
+
       response = connection.post("/submissions") do |req|
         req.body = {
           template_id: config.trade_agreement_template_id,
           send_email: false,  # We handle emails ourselves
           order: "preserved",  # Sequential signing: Seller → Buyer
-          submitters: build_submitters(trade)
+          submitters: submitters_data
         }
       end
 
@@ -88,6 +104,19 @@ class DocusealService
       { success: false, error: e.message }
     end
 
+    # Get template details including fields
+    def get_template(template_id = nil)
+      config = Rails.application.config.x.docuseal
+      return { success: false, error: "DocuSeal API key not configured" } unless config.api_key
+
+      template_id ||= config.trade_agreement_template_id
+      response = connection.get("/templates/#{template_id}")
+      parse_response(response)
+    rescue => e
+      Rails.logger.error "Error getting template: #{e.message}"
+      { success: false, error: e.message }
+    end
+
     private
 
     def connection
@@ -112,7 +141,8 @@ class DocusealService
           name: trade.seller_name || trade.seller.name,
           values: common_fields.merge({
             seller_name_confirm: trade.seller_name || trade.seller.name,
-            seller_email_confirm: trade.seller.email
+            seller_email_confirm: trade.seller.email,
+            seller_date: Time.current.strftime("%B %d, %Y")
           })
         },
         {
@@ -121,7 +151,8 @@ class DocusealService
           name: trade.buyer_name || trade.buyer_email.split("@").first.titleize,
           values: common_fields.merge({
             buyer_name_confirm: trade.buyer_name || trade.buyer_email.split("@").first.titleize,
-            buyer_email_confirm: trade.buyer_email
+            buyer_email_confirm: trade.buyer_email,
+            buyer_date: Time.current.strftime("%B %d, %Y")
           })
         }
       ]
