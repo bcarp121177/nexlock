@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #10b981;">Item Accepted - Payout Initiated</h2>
+
+    <p>Hi <%= @recipient.name %>,</p>
+
+    <p>Great news! The buyer has accepted the item from Trade #<%= @trade.id %>.</p>
+
+    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+      <h3 style="margin-top: 0;">Payout Details</h3>
+      <p><strong>Item:</strong> <%= @trade.item&.name %></p>
+      <p><strong>Sale Price:</strong> <%= number_to_currency(@trade.price / 100.0) %></p>
+      <% if @trade.platform_fee_cents && @trade.fee_split == 'seller' %>
+        <p><strong>Platform Fee:</strong> -<%= number_to_currency(@trade.platform_fee_cents / 100.0) %></p>
+        <p><strong>Your Payout:</strong> <%= number_to_currency(TradeService.calculate_payout_amount(@trade) / 100.0) %></p>
+      <% else %>
+        <p><strong>Your Payout:</strong> <%= number_to_currency(@trade.price / 100.0) %></p>
+      <% end %>
+    </div>
+
+    <p>The payout has been initiated to your connected Stripe account. Funds typically arrive in 2-3 business days.</p>
+
+    <div style="margin: 30px 0;">
+      <%= link_to "View Trade Details", trade_url(@trade), style: "display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;" %>
+    </div>
+
+    <p style="color: #6b7280; font-size: 14px;">
+      Thank you for using <%= Jumpstart.config.application_name %> for your secure transaction!
+    </p>
+  </div>
+</body>
+</html>

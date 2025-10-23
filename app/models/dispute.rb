@@ -6,12 +6,12 @@ class Dispute < ApplicationRecord
 
   has_many :evidences, dependent: :destroy
 
-  enum status: {
+  enum :status, {
     open: "open",
     under_review: "under_review",
     resolved: "resolved",
     closed: "closed"
-  }, _suffix: true
+  }, suffix: true
 
   validates :reason, :status, presence: true
 end

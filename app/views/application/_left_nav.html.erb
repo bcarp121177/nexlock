@@ -1,4 +1,14 @@
 <%= render "account_menu" if Jumpstart.config.team_accounts? && user_signed_in? && Current.other_accounts.any? %>
 
-<%# Place any links for the LEFT side of the nav bar here. For example: %>
-<%#= nav_link_to "Dashboard", root_path %>
+<% if user_signed_in? %>
+  <%= nav_link_to "Trades", trades_path %>
+
+  <% open_support_count = current_account.support_requests.where.not(status: 'closed').count %>
+  <% if open_support_count > 0 %>
+    <%= nav_link_to support_requests_path do %>
+      Support <span class="inline-flex items-center justify-center px-2 py-0.5 ml-2 text-xs font-medium rounded-full bg-orange-100 text-orange-800"><%= open_support_count %></span>
+    <% end %>
+  <% else %>
+    <%= nav_link_to "Support", support_requests_path %>
+  <% end %>
+<% end %>

@@ -6,6 +6,7 @@ Rails.application.routes.draw do
   draw :hotwire_native
   draw :users
   draw :trades
+  draw :support_requests
   draw :settings
   draw :webhooks
   draw :dev if Rails.env.local?

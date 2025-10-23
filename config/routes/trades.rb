@@ -17,6 +17,7 @@ resources :trades, only: [:index, :new, :create, :show] do
     post :mark_return_delivered
     post :confirm_return_receipt
     post :accept_return
+    get :reject_return_form
     post :reject_return
   end
 

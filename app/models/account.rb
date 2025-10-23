@@ -16,4 +16,5 @@ class Account < ApplicationRecord
   has_many :document_signatures, dependent: :destroy
   has_many :disputes, dependent: :destroy
   has_many :evidences, dependent: :destroy
+  has_many :support_requests, dependent: :destroy
 end

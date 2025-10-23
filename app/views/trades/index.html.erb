@@ -58,7 +58,12 @@
                   <%= l(trade.updated_at, format: :short) %>
                 </td>
                 <td class="px-6 py-4 text-right">
-                  <%= link_to t("trades.index.table.view", default: "View"), trade_path(trade), class: "text-sm font-medium text-app-accent hover:underline" %>
+                  <div class="flex items-center justify-end gap-3">
+                    <%= link_to t("trades.index.table.view", default: "View"), trade_path(trade), class: "text-sm font-medium text-app-accent hover:underline" %>
+                    <% if trade.dispute.present? %>
+                      <%= link_to t("trades.index.table.view_support", default: "Support"), madmin_dispute_path(trade.dispute), class: "text-sm font-medium text-orange-600 hover:underline", target: "_blank" %>
+                    <% end %>
+                  </div>
                 </td>
               </tr>
             <% end %>

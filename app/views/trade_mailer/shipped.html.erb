@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #3b82f6;">Your Item Has Been Shipped</h2>
+
+    <p>Hi <%= @recipient.name %>,</p>
+
+    <p>Good news! Your item from Trade #<%= @trade.id %> has been shipped.</p>
+
+    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+      <h3 style="margin-top: 0;">Shipment Details</h3>
+      <p><strong>Item:</strong> <%= @trade.item&.name %></p>
+      <% if @shipment %>
+        <p><strong>Carrier:</strong> <%= @shipment.carrier %></p>
+        <p><strong>Tracking Number:</strong> <%= @shipment.tracking_number %></p>
+        <% if @shipment.tracking_url %>
+          <p><%= link_to "Track Package", @shipment.tracking_url, style: "color: #3b82f6;" %></p>
+        <% end %>
+        <% if @shipment.est_delivery_date %>
+          <p><strong>Estimated Delivery:</strong> <%= @shipment.est_delivery_date.strftime("%B %d, %Y") %></p>
+        <% end %>
+      <% end %>
+    </div>
+
+    <p><strong>Next Steps:</strong></p>
+    <ul>
+      <li>Track your package using the tracking number above</li>
+      <li>Once delivered, confirm receipt in the trade</li>
+      <li>Inspect the item during your <%= @trade.inspection_window_hours %>-hour inspection window</li>
+    </ul>
+
+    <div style="margin: 30px 0;">
+      <%= link_to "View Trade Details", trade_url(@trade), style: "display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;" %>
+    </div>
+  </div>
+</body>
+</html>

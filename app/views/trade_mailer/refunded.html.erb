@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #10b981;">Refund Processed</h2>
+
+    <p>Hi <%= @recipient.name %>,</p>
+
+    <p>Your refund for Trade #<%= @trade.id %> has been successfully processed.</p>
+
+    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+      <h3 style="margin-top: 0;">Refund Summary</h3>
+      <p><strong>Item:</strong> <%= @trade.item&.name %></p>
+      <p><strong>Refund Amount:</strong> <%= number_to_currency(@refund_amount / 100.0) %></p>
+      <p><strong>Refund Method:</strong> Original payment method</p>
+    </div>
+
+    <div style="background-color: #dbeafe; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #3b82f6;">
+      <p style="margin: 0;">
+        <strong>When will I see the refund?</strong><br>
+        Refunds typically appear in 5-10 business days, depending on your bank or card issuer.
+      </p>
+    </div>
+
+    <div style="margin: 30px 0;">
+      <%= link_to "View Trade Details", trade_url(@trade), style: "display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;" %>
+    </div>
+
+    <p style="color: #6b7280; font-size: 14px;">
+      If you don't see the refund within 10 business days, please contact your bank or <%= link_to "our support team", "mailto:#{Jumpstart.config.support_email}" %>.
+    </p>
+  </div>
+</body>
+</html>

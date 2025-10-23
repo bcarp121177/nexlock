@@ -20,6 +20,8 @@ class User < ApplicationRecord
   has_many :opened_disputes, class_name: "Dispute", foreign_key: :opened_by_id, dependent: :nullify
   has_many :resolved_disputes, class_name: "Dispute", foreign_key: :resolved_by_id, dependent: :nullify
   has_many :document_signatures, dependent: :nullify
+  has_many :opened_support_requests, class_name: "SupportRequest", foreign_key: :opened_by_id, dependent: :nullify
+  has_many :closed_support_requests, class_name: "SupportRequest", foreign_key: :closed_by_id, dependent: :nullify
 
   validates :avatar, resizable_image: true
   validates :name, presence: true

@@ -10,11 +10,11 @@
 #
 # Uncomment the following to create an Admin user for Production in Jumpstart Pro
 #
-#   user = User.create(
-#     name: "Admin User",
-#     email: "email@example.org",
-#     password: "password",
-#     password_confirmation: "password",
-#     terms_of_service: true
-#   )
-#   Jumpstart.grant_system_admin!(user)
+   user = User.first_or_create(
+     name: "Brian Carpenter",
+     email: "bmc121177@gmail.com",
+     password: "123456",
+     password_confirmation: "123456",
+     terms_of_service: true
+   )
+   Jumpstart.grant_system_admin!(user)

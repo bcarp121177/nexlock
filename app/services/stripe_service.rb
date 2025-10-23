@@ -158,5 +158,43 @@ class StripeService
         { success: false, error: e.message }
       end
     end
+
+    # Create refund for buyer when return is accepted
+    def create_refund(trade)
+      escrow = trade.escrow
+
+      unless escrow&.payment_intent_id
+        return { success: false, error: "No payment intent found for refund" }
+      end
+
+      # Calculate refund amount based on return shipping costs
+      amount_to_refund = trade.calculate_refund_amount
+
+      begin
+        refund = Stripe::Refund.create(
+          payment_intent: escrow.payment_intent_id,
+          amount: amount_to_refund,
+          reason: 'requested_by_customer',
+          metadata: {
+            trade_id: trade.id,
+            buyer_id: trade.buyer_id,
+            seller_id: trade.seller_id,
+            return_shipping_paid_by: trade.return_shipping_paid_by
+          }
+        )
+
+        # Update escrow status
+        escrow.update!(
+          status: 'refunded',
+          refunded_at: Time.current
+        )
+
+        Rails.logger.info "Refund created: #{refund.id} for trade #{trade.id}, amount: #{amount_to_refund}"
+        { success: true, refund: refund }
+      rescue Stripe::StripeError => e
+        Rails.logger.error "Stripe refund error for trade #{trade.id}: #{e.message}"
+        { success: false, error: e.message }
+      end
+    end
   end
 end

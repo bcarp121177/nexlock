@@ -27,5 +27,22 @@ namespace :madmin, path: :admin do
     resources :subscriptions
   end
 
+  resources :trades
+  resources :disputes do
+    member do
+      post :resolve_refund
+      post :resolve_release
+      post :resolve_split
+    end
+  end
+
+  resources :support_requests do
+    member do
+      post :reply
+      post :close
+      post :reopen
+    end
+  end
+
   root to: "dashboard#show"
 end

@@ -1,0 +1,153 @@
+<% page_title = @support_request.subject %>
+<% Current.meta_tags.set(title: page_title) %>
+
+<div class="max-w-4xl mx-auto space-y-8 py-8">
+  <%= render PageHeaderComponent.new(title: @support_request.subject, subtitle: "Support Request ##{@support_request.id}") do |header| %>
+    <% header.actions do %>
+      <%= link_to "← Back to Requests", support_requests_path, class: "btn-app-secondary" %>
+    <% end %>
+  <% end %>
+
+  <div class="grid gap-6 md:grid-cols-3">
+    <%= render CardComponent.new do %>
+      <p class="text-sm text-app-muted">Status</p>
+      <p class="mt-2">
+        <% if @support_request.open_status? %>
+          <span class="inline-flex px-3 py-1 text-sm font-medium rounded bg-blue-100 text-blue-800">Open</span>
+        <% elsif @support_request.responded_status? %>
+          <span class="inline-flex px-3 py-1 text-sm font-medium rounded bg-green-100 text-green-800">Responded</span>
+        <% elsif @support_request.closed_status? %>
+          <span class="inline-flex px-3 py-1 text-sm font-medium rounded bg-gray-100 text-gray-800">Closed</span>
+        <% end %>
+      </p>
+    <% end %>
+
+    <%= render CardComponent.new do %>
+      <p class="text-sm text-app-muted">Created</p>
+      <p class="mt-2 text-sm font-medium text-app-strong"><%= l(@support_request.created_at, format: :long) %></p>
+    <% end %>
+
+    <%= render CardComponent.new do %>
+      <p class="text-sm text-app-muted">Related Trade</p>
+      <p class="mt-2">
+        <% if @support_request.trade %>
+          <%= link_to "View Trade ##{@support_request.trade_id}", trade_path(@support_request.trade), class: "text-sm font-medium text-app-accent hover:underline" %>
+        <% else %>
+          <span class="text-sm text-app-muted">No trade linked</span>
+        <% end %>
+      </p>
+    <% end %>
+  </div>
+
+  <%= render CardComponent.new do %>
+    <div class="space-y-6">
+      <div class="flex items-start justify-between">
+        <h2 class="text-lg font-semibold text-app-strong">Conversation</h2>
+        <% if @support_request.open_status? || @support_request.responded_status? %>
+          <%= button_to "Close Request", close_support_request_path(@support_request), method: :post, class: "text-sm text-app-muted hover:text-app-strong", data: { confirm: "Are you sure you want to close this request?" } %>
+        <% end %>
+      </div>
+
+      <div class="space-y-4">
+        <% @messages.each do |message| %>
+          <div class="p-4 rounded-lg <%= message.admin_message? ? 'bg-blue-50 border-2 border-blue-200' : 'bg-app-muted' %>">
+            <div class="flex items-start justify-between mb-2">
+              <div class="flex items-center gap-2">
+                <span class="font-medium <%= message.admin_message? ? 'text-blue-900' : 'text-app-strong' %>">
+                  <% if message.admin_message? %>
+                    <%= message.author&.first_name || 'Support Team' %>
+                  <% else %>
+                    <%= message.author_name %>
+                  <% end %>
+                </span>
+                <% if message.admin_message? %>
+                  <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded bg-blue-600 text-white">Support Team</span>
+                <% end %>
+              </div>
+              <span class="text-xs text-app-muted"><%= l(message.created_at, format: :long) %></span>
+            </div>
+
+            <div class="text-sm <%= message.admin_message? ? 'text-blue-900' : 'text-app-strong' %> whitespace-pre-wrap"><%= message.body %></div>
+
+            <% if message.files.attached? %>
+              <div class="mt-3 pt-3 border-t border-app-subtle">
+                <p class="text-xs font-medium text-app-muted mb-2">Attachments:</p>
+                <div class="flex flex-wrap gap-2">
+                  <% message.files.each do |file| %>
+                    <%= link_to file.filename.to_s, rails_blob_path(file, disposition: "attachment"), class: "inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded bg-white border border-app-subtle text-app-strong hover:bg-app-muted" do %>
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                      </svg>
+                      <%= file.filename %>
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+      <% unless @support_request.closed_status? %>
+        <hr class="border-app-subtle">
+
+        <div>
+          <h3 class="text-sm font-semibold text-app-strong mb-3">Add a reply</h3>
+          <%= form_with url: reply_support_request_path(@support_request), method: :post, local: true, class: "space-y-4" do |f| %>
+            <%= text_area_tag :body, nil, rows: 4, required: true, placeholder: "Type your message here...", class: "block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+
+            <div>
+              <label class="block text-sm font-medium text-app-strong mb-2">
+                Add attachments (optional)
+              </label>
+              <div class="flex items-center gap-3">
+                <label for="files" class="btn-app-secondary cursor-pointer">
+                  <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                  </svg>
+                  Choose Files
+                </label>
+                <span id="file-count" class="text-sm text-app-muted">No files chosen</span>
+              </div>
+              <%= file_field_tag :files, multiple: true, id: "files", class: "hidden", data: { action: "change->file-display#update" } %>
+            </div>
+
+            <script>
+              // Simple file display without Stimulus
+              document.addEventListener('DOMContentLoaded', function() {
+                const fileInput = document.getElementById('files');
+                const fileCount = document.getElementById('file-count');
+
+                if (fileInput) {
+                  fileInput.addEventListener('change', function(e) {
+                    const count = e.target.files.length;
+                    if (count === 0) {
+                      fileCount.textContent = 'No files chosen';
+                      fileCount.classList.remove('text-app-strong');
+                      fileCount.classList.add('text-app-muted');
+                    } else if (count === 1) {
+                      fileCount.textContent = e.target.files[0].name;
+                      fileCount.classList.remove('text-app-muted');
+                      fileCount.classList.add('text-app-strong');
+                    } else {
+                      fileCount.textContent = count + ' files selected';
+                      fileCount.classList.remove('text-app-muted');
+                      fileCount.classList.add('text-app-strong');
+                    }
+                  });
+                }
+              });
+            </script>
+
+            <%= submit_tag "Send Reply", class: "btn-app-primary" %>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="p-4 rounded-lg bg-gray-50 border border-gray-200 text-center">
+          <p class="text-sm text-gray-700">This support request has been closed.</p>
+          <p class="mt-1 text-xs text-gray-600">Closed on <%= l(@support_request.closed_at, format: :long) %></p>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>

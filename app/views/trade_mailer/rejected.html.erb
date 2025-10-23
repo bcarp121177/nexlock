@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+  <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+    <h2 style="color: #ef4444;">Item Rejected - Return Initiated</h2>
+
+    <p>Hi <%= @recipient.name %>,</p>
+
+    <p>The buyer has rejected the item from Trade #<%= @trade.id %>.</p>
+
+    <div style="background-color: #f3f4f6; padding: 15px; border-radius: 5px; margin: 20px 0;">
+      <h3 style="margin-top: 0;">Return Details</h3>
+      <p><strong>Item:</strong> <%= @trade.item&.name %></p>
+      <p><strong>Rejection Reason:</strong> <%= @trade.rejection_category&.humanize %></p>
+      <% if @trade.evidences.any? %>
+        <p><strong>Buyer's Notes:</strong> <%= @trade.evidences.last.description %></p>
+      <% end %>
+    </div>
+
+    <% if @return_shipment %>
+      <div style="background-color: #fef3c7; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #f59e0b;">
+        <h3 style="margin-top: 0;">Return Shipping Label</h3>
+        <p><strong>Carrier:</strong> <%= @return_shipment.carrier %></p>
+        <p><strong>Tracking Number:</strong> <%= @return_shipment.tracking_number %></p>
+        <% if @return_shipment.label_url %>
+          <p><%= link_to "Download Return Label", @return_shipment.label_url, style: "color: #3b82f6;" %></p>
+        <% end %>
+      </div>
+    <% end %>
+
+    <p><strong>Next Steps:</strong></p>
+    <ul>
+      <li>Download and print the return shipping label</li>
+      <li>Package the item and attach the label</li>
+      <li>Drop off at the carrier location</li>
+      <li>Once you receive the return, you'll have <%= ENV.fetch('RETURN_INSPECTION_HOURS', '48') %> hours to inspect</li>
+    </ul>
+
+    <div style="margin: 30px 0;">
+      <%= link_to "View Trade Details", trade_url(@trade), style: "display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;" %>
+    </div>
+
+    <p style="color: #6b7280; font-size: 14px;">
+      <strong>Return Shipping Cost:</strong> <%= @trade.return_shipping_paid_by.humanize %>
+    </p>
+  </div>
+</body>
+</html>

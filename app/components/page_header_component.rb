@@ -11,4 +11,13 @@ class PageHeaderComponent < JumpstartComponent
   def subtitle?
     subtitle.present?
   end
+
+  # Override actions method to capture blocks
+  def actions(&block)
+    if block_given?
+      capture_for(:actions, &block)
+    else
+      @actions
+    end
+  end
 end

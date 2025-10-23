@@ -1,0 +1,132 @@
+<% page_title = "Reject Return" %>
+<% Current.meta_tags.set(title: page_title) %>
+
+<div class="max-w-3xl mx-auto space-y-8 py-8">
+  <%= render PageHeaderComponent.new(title: "Reject Return", subtitle: "Provide details about why you're rejecting this return") do |header| %>
+    <% header.actions do %>
+      <%= link_to "← Back to Trade", trade_path(@trade), class: "btn-app-secondary" %>
+    <% end %>
+  <% end %>
+
+  <%= render CardComponent.new do %>
+    <div class="mb-6 p-4 rounded-lg bg-yellow-50 border border-yellow-200">
+      <div class="flex gap-3">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <div class="text-sm text-yellow-800">
+          <p class="font-medium mb-1">Important Information</p>
+          <p>Rejecting this return will create a dispute case. Please provide a clear explanation and any supporting documentation (photos, videos, etc.) to help resolve the dispute.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-6 pb-6 border-b border-app-subtle">
+      <h2 class="text-lg font-semibold text-app-strong mb-4">Trade Summary</h2>
+      <dl class="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <dt class="text-app-muted">Item</dt>
+          <dd class="font-medium text-app-strong mt-1"><%= @trade.item&.name || "N/A" %></dd>
+        </div>
+        <div>
+          <dt class="text-app-muted">Amount</dt>
+          <dd class="font-medium text-app-strong mt-1"><%= number_to_currency(@trade.price_cents / 100.0) %></dd>
+        </div>
+        <div>
+          <dt class="text-app-muted">Buyer</dt>
+          <dd class="font-medium text-app-strong mt-1"><%= @trade.buyer&.name || @trade.buyer_email %></dd>
+        </div>
+        <div>
+          <dt class="text-app-muted">Trade ID</dt>
+          <dd class="font-medium text-app-strong mt-1">#<%= @trade.id %></dd>
+        </div>
+      </dl>
+    </div>
+
+    <%= form_with url: reject_return_trade_path(@trade), method: :post, local: true, class: "space-y-6" do |f| %>
+      <div>
+        <label for="rejection_reason" class="block text-sm font-medium text-app-strong mb-2">
+          Reason for Rejection <span class="text-red-600">*</span>
+        </label>
+        <%= text_area_tag :rejection_reason, nil, rows: 8, required: true,
+            placeholder: "Please explain in detail why you are rejecting this return. Include:\n\n• What condition issues you found (if any)\n• How the returned item differs from what was sent\n• Any evidence of buyer misuse or damage\n• Other relevant details",
+            class: "block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+        <p class="mt-2 text-xs text-app-muted">
+          Be specific and factual. This information will be shared with the buyer and our support team.
+        </p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-app-strong mb-2">
+          Supporting Documentation
+        </label>
+        <p class="text-sm text-app-muted mb-3">
+          Upload photos or videos showing the condition of the returned item. This evidence will help support your case.
+        </p>
+        <div class="flex items-center gap-3">
+          <label for="rejection-files" class="btn-app-secondary cursor-pointer">
+            <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+            </svg>
+            Choose Files
+          </label>
+          <span id="rejection-file-count" class="text-sm text-app-muted">No files chosen</span>
+        </div>
+        <%= file_field_tag :files, multiple: true, id: "rejection-files", class: "hidden",
+            accept: "image/*,video/*,.pdf,.doc,.docx" %>
+        <p class="mt-2 text-xs text-app-muted">
+          Accepted formats: Images (JPG, PNG), Videos (MP4, MOV), Documents (PDF, DOC)
+        </p>
+      </div>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          const fileInput = document.getElementById('rejection-files');
+          const fileCount = document.getElementById('rejection-file-count');
+
+          if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+              const count = e.target.files.length;
+              if (count === 0) {
+                fileCount.textContent = 'No files chosen';
+                fileCount.classList.remove('text-app-strong', 'font-medium');
+                fileCount.classList.add('text-app-muted');
+              } else if (count === 1) {
+                fileCount.textContent = e.target.files[0].name;
+                fileCount.classList.remove('text-app-muted');
+                fileCount.classList.add('text-app-strong', 'font-medium');
+              } else {
+                const fileNames = Array.from(e.target.files).map(f => f.name).slice(0, 2).join(', ');
+                const extra = count > 2 ? ` and ${count - 2} more` : '';
+                fileCount.textContent = fileNames + extra;
+                fileCount.classList.remove('text-app-muted');
+                fileCount.classList.add('text-app-strong', 'font-medium');
+              }
+            });
+          }
+        });
+      </script>
+
+      <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div class="flex gap-3">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <div class="text-sm text-red-800">
+            <p class="font-medium mb-1">Confirm Rejection</p>
+            <p>By rejecting this return, you are opening a dispute case. Our support team will review the evidence from both parties and make a decision on how to proceed.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3 pt-4">
+        <%= link_to "Cancel", trade_path(@trade), class: "btn-app-secondary" %>
+        <%= submit_tag "Reject Return & Open Dispute", class: "btn-app-primary bg-red-600 hover:bg-red-700 focus:ring-red-500", data: { turbo_confirm: "Are you sure you want to reject this return and open a dispute?" } %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

@@ -1,0 +1,149 @@
+<% page_title = "Get Support" %>
+<% Current.meta_tags.set(title: page_title) %>
+
+<div class="max-w-2xl mx-auto space-y-8 py-8">
+  <%= render PageHeaderComponent.new(title: "Get Support", subtitle: "Tell us what you need help with") do |header| %>
+    <% header.actions do %>
+      <% if user_signed_in? %>
+        <%= link_to "← Back to Requests", support_requests_path, class: "btn-app-secondary" %>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <%= render CardComponent.new do %>
+    <% if @trade.present? %>
+      <div class="mb-6">
+        <h2 class="text-lg font-semibold text-app-strong mb-2">Trade Summary</h2>
+        <dl class="grid grid-cols-2 gap-3 text-sm">
+          <div>
+            <dt class="text-app-muted">Item</dt>
+            <dd class="font-medium text-app-strong"><%= @trade.item&.name || "N/A" %></dd>
+          </div>
+          <div>
+            <dt class="text-app-muted">Amount</dt>
+            <dd class="font-medium text-app-strong"><%= number_to_currency(@trade.price_cents / 100.0) %></dd>
+          </div>
+          <div>
+            <dt class="text-app-muted">Current Status</dt>
+            <dd><span class="inline-flex px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800"><%= @trade.state.humanize %></span></dd>
+          </div>
+        </dl>
+      </div>
+      <hr class="border-app-subtle mb-6">
+    <% end %>
+
+    <%= form_with model: @support_request, url: support_requests_path, local: true, class: "space-y-6" do |f| %>
+      <% if @support_request.errors.any? %>
+        <div class="p-4 rounded-lg bg-red-50 border border-red-200">
+          <p class="text-sm font-medium text-red-800">Please fix the following errors:</p>
+          <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+            <% @support_request.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <%= f.hidden_field :trade_id, value: @trade&.id %>
+
+      <% unless user_signed_in? %>
+        <div>
+          <label for="support_request_email" class="block text-sm font-medium text-app-strong mb-2">
+            Your Email <span class="text-red-600">*</span>
+          </label>
+          <%= f.text_field :email, required: true, class: "block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus", placeholder: "you@example.com" %>
+          <p class="mt-1 text-xs text-app-muted">We'll use this to respond to your request</p>
+        </div>
+      <% end %>
+
+      <div>
+        <label for="support_request_subject" class="block text-sm font-medium text-app-strong mb-2">
+          Subject <span class="text-red-600">*</span>
+        </label>
+        <%= f.text_field :subject, required: true, class: "block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus", placeholder: "Brief description of your issue" %>
+      </div>
+
+      <div>
+        <label for="description" class="block text-sm font-medium text-app-strong mb-2">
+          Description <span class="text-red-600">*</span>
+        </label>
+        <%= text_area_tag :description, nil, rows: 6, required: true, placeholder: "Tell us what's happening and what you need help with. The more detail you provide, the better we can assist you.", class: "block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+        <p class="mt-2 text-xs text-app-muted">
+          Include any relevant details like dates, amounts, error messages, or steps you've already tried.
+        </p>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-app-strong mb-2">
+          Attachments (optional)
+        </label>
+        <div class="flex items-center gap-3">
+          <label for="new-files" class="btn-app-secondary cursor-pointer">
+            <svg class="w-4 h-4 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+            </svg>
+            Choose Files
+          </label>
+          <span id="new-file-count" class="text-sm text-app-muted">No files chosen</span>
+        </div>
+        <%= file_field_tag :files, multiple: true, id: "new-files", class: "hidden" %>
+        <p class="mt-2 text-xs text-app-muted">You can attach screenshots, documents, or other files to help explain your issue</p>
+      </div>
+
+      <script>
+        // Simple file display without Stimulus
+        document.addEventListener('DOMContentLoaded', function() {
+          const fileInput = document.getElementById('new-files');
+          const fileCount = document.getElementById('new-file-count');
+
+          if (fileInput) {
+            fileInput.addEventListener('change', function(e) {
+              const count = e.target.files.length;
+              if (count === 0) {
+                fileCount.textContent = 'No files chosen';
+                fileCount.classList.remove('text-app-strong');
+                fileCount.classList.add('text-app-muted');
+              } else if (count === 1) {
+                fileCount.textContent = e.target.files[0].name;
+                fileCount.classList.remove('text-app-muted');
+                fileCount.classList.add('text-app-strong');
+              } else {
+                fileCount.textContent = count + ' files selected';
+                fileCount.classList.remove('text-app-muted');
+                fileCount.classList.add('text-app-strong');
+              }
+            });
+          }
+        });
+      </script>
+
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex gap-3">
+          <div class="flex-shrink-0">
+            <svg class="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+            </svg>
+          </div>
+          <div class="text-sm text-blue-800">
+            <p class="font-medium mb-1">What happens next?</p>
+            <ul class="list-disc list-inside space-y-1 text-blue-700">
+              <li>Our support team will review your request</li>
+              <li>We'll investigate the issue and get back to you</li>
+              <li>You can reply to our emails to continue the conversation</li>
+              <li>We typically respond within 24 hours</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-3 pt-4">
+        <% if user_signed_in? %>
+          <%= link_to "Cancel", @trade.present? ? trade_path(@trade) : support_requests_path, class: "btn-app-secondary" %>
+        <% else %>
+          <%= link_to "Cancel", root_path, class: "btn-app-secondary" %>
+        <% end %>
+        <%= f.submit "Submit Support Request", class: "btn-app-primary" %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

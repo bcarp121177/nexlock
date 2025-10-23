@@ -16,6 +16,8 @@ module Webhooks
         handle_payment_succeeded(event.data.object)
       when "charge.succeeded"
         handle_charge_succeeded(event.data.object)
+      when "charge.refunded"
+        handle_charge_refunded(event.data.object)
       else
         Rails.logger.info "Stripe webhook received unhandled event: #{event.type}"
       end
@@ -93,7 +95,38 @@ module Webhooks
         escrow.update(payment_intent_id: session.payment_intent)
       end
 
-      Rails.logger.info "Checkout completed for trade #{trade_id}, waiting for payment_intent.succeeded"
+      # If payment_status is 'paid', the payment is complete - transition the trade
+      if session.payment_status == 'paid'
+        escrow.update!(
+          status: 'held',
+          funded_at: Time.current
+        )
+
+        # Transition trade to funded state
+        if trade.may_mark_funded?
+          trade.mark_funded!
+
+          AuditLog.create!(
+            trade: trade,
+            account: trade.account,
+            actor_id: trade.buyer_id,
+            action: "payment_succeeded",
+            metadata: {
+              payment_intent_id: session.payment_intent,
+              amount_cents: session.amount_total,
+              timestamp: Time.current
+            }
+          )
+
+          Rails.logger.info "Trade #{trade.id} funded successfully via checkout.session.completed"
+        else
+          Rails.logger.error "Trade #{trade.id} cannot transition to funded from #{trade.state}"
+        end
+      else
+        Rails.logger.info "Checkout completed for trade #{trade_id}, payment_status: #{session.payment_status}, waiting for payment_intent.succeeded"
+      end
+    rescue => e
+      Rails.logger.error "Error handling checkout completed: #{e.message}\n#{e.backtrace.join("\n")}"
     end
 
     def handle_payment_succeeded(payment_intent)
@@ -194,6 +227,51 @@ module Webhooks
       end
     rescue => e
       Rails.logger.error "Error handling charge succeeded: #{e.message}\n#{e.backtrace.join("\n")}"
+    end
+
+    def handle_charge_refunded(charge)
+      trade_id = charge.metadata.trade_id
+      unless trade_id
+        Rails.logger.error "No trade_id in charge metadata"
+        return
+      end
+
+      trade = Trade.find_by(id: trade_id)
+      unless trade
+        Rails.logger.error "Trade not found: #{trade_id}"
+        return
+      end
+
+      escrow = trade.escrow
+      unless escrow
+        Rails.logger.error "No escrow record for trade #{trade_id}"
+        return
+      end
+
+      # Update escrow to refunded status if not already
+      unless escrow.refunded_status?
+        escrow.update!(
+          status: 'refunded',
+          refunded_at: Time.current
+        )
+      end
+
+      # Log the refund confirmation
+      AuditLog.create!(
+        trade: trade,
+        account: trade.account,
+        actor_id: trade.buyer_id,
+        action: "refund_confirmed",
+        metadata: {
+          charge_id: charge.id,
+          amount_refunded: charge.amount_refunded,
+          timestamp: Time.current
+        }
+      )
+
+      Rails.logger.info "Refund confirmed for trade #{trade.id}, amount: #{charge.amount_refunded}"
+    rescue => e
+      Rails.logger.error "Error handling charge refunded: #{e.message}\n#{e.backtrace.join("\n")}"
     end
   end
 end

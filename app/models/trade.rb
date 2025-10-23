@@ -45,6 +45,7 @@ class Trade < ApplicationRecord
   has_many :trade_documents, dependent: :destroy
   has_many :document_signatures, through: :trade_documents
   has_many :evidences, dependent: :destroy
+  has_many :support_requests, dependent: :destroy
 
   has_many_attached :media
   has_one_attached :signed_agreement
@@ -179,7 +180,7 @@ class Trade < ApplicationRecord
     end
 
     event :accept_return do
-      transitions from: :return_inspection, to: :returned
+      transitions from: :return_inspection, to: :returned, after: :notify_return_accepted
     end
 
     event :reject_return do
@@ -187,11 +188,25 @@ class Trade < ApplicationRecord
     end
 
     event :refund do
-      transitions from: %i[returned disputed], to: :refunded, after: :process_refund
+      transitions from: %i[returned disputed], to: :refunded, after: %i[process_refund notify_refund_processed]
     end
 
     event :open_dispute do
-      transitions from: %i[rejected return_in_transit], to: :disputed
+      transitions from: %i[
+        draft
+        awaiting_seller_signature
+        awaiting_buyer_signature
+        signature_deadline_missed
+        awaiting_funding
+        funded
+        shipped
+        delivered_pending_confirmation
+        inspection
+        rejected
+        return_in_transit
+        return_delivered_pending_confirmation
+        return_inspection
+      ], to: :disputed
     end
 
     event :resolve_with_release do
@@ -381,6 +396,14 @@ class Trade < ApplicationRecord
 
   def notify_seller_rejected
     NotificationService.send_item_rejected(self)
+  end
+
+  def notify_return_accepted
+    NotificationService.send_return_accepted(self)
+  end
+
+  def notify_refund_processed
+    NotificationService.send_refund_processed(self)
   end
 
   def schedule_ship_by_timer

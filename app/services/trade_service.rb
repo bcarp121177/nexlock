@@ -283,10 +283,25 @@ class TradeService
       { success: false, error: e.message }
     end
 
-    def reject_return(trade)
+    def reject_return(trade, rejection_reason: nil)
       return { success: false, error: "Invalid state" } unless trade.may_reject_return?
 
       trade.reject_return!
+
+      # Create audit log with rejection reason if provided
+      if rejection_reason.present?
+        AuditLog.create!(
+          trade: trade,
+          account: trade.account,
+          actor_id: trade.seller_id,
+          action: "return_rejected",
+          metadata: {
+            rejection_reason: rejection_reason,
+            timestamp: Time.current
+          }
+        )
+      end
+
       { success: true, message: "Return rejected. Dispute opened." }
     rescue => e
       { success: false, error: e.message }

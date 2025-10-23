@@ -4,7 +4,7 @@ class TradesController < ApplicationController
   before_action :authenticate_user!
   before_action :ensure_account
   before_action :set_trades_scope, only: [:index]
-  before_action :set_trade, only: [:show, :attach_media, :send_to_buyer, :agree, :fund, :ship, :mark_delivered, :confirm_receipt, :accept, :reject, :send_for_signature, :cancel_signature_request, :retry_signature, :signing_url, :mark_return_shipped, :mark_return_delivered, :confirm_return_receipt, :accept_return, :reject_return]
+  before_action :set_trade, only: [:show, :attach_media, :send_to_buyer, :agree, :fund, :ship, :mark_delivered, :confirm_receipt, :accept, :reject, :send_for_signature, :cancel_signature_request, :retry_signature, :signing_url, :mark_return_shipped, :mark_return_delivered, :confirm_return_receipt, :accept_return, :reject_return_form, :reject_return]
 
   def index
     @pagy, @trades = pagy(@trades_scope.ordered, limit: 25)
@@ -295,13 +295,59 @@ class TradesController < ApplicationController
     end
   end
 
-  def reject_return
-    result = TradeService.reject_return(@trade)
+  def reject_return_form
+    # Show form for seller to provide rejection reason
+    unless @trade.may_reject_return?
+      redirect_to trade_path(@trade), alert: "Cannot reject return in current state"
+      return
+    end
 
-    if result[:success]
-      redirect_to trade_path(@trade), notice: result[:message]
+    unless current_user == @trade.seller
+      redirect_to trade_path(@trade), alert: "Only the seller can reject returns"
+      return
+    end
+  end
+
+  def reject_return
+    unless current_user == @trade.seller
+      redirect_to trade_path(@trade), alert: "Only the seller can reject returns"
+      return
+    end
+
+    # Create support request with dispute type
+    support_request = current_account.support_requests.new(
+      trade: @trade,
+      opened_by: current_user,
+      subject: "Return Rejection - Trade ##{@trade.id}",
+      request_type: "dispute",
+      status: "open"
+    )
+
+    # Create initial message with rejection reason
+    message = support_request.support_messages.build(
+      body: params[:rejection_reason],
+      author: current_user,
+      sent_via: "web"
+    )
+
+    if support_request.save && message.save
+      # Attach files if provided
+      if params[:files].present?
+        message.files.attach(params[:files])
+      end
+
+      # Transition trade to disputed state
+      result = TradeService.reject_return(@trade, rejection_reason: params[:rejection_reason])
+
+      if result[:success]
+        redirect_to trade_path(@trade), notice: "Return rejected. Dispute case created."
+      else
+        # If state transition fails, delete the support request
+        support_request.destroy
+        redirect_to reject_return_form_trade_path(@trade), alert: result[:error]
+      end
     else
-      redirect_to trade_path(@trade), alert: result[:error]
+      redirect_to reject_return_form_trade_path(@trade), alert: "Please provide a rejection reason"
     end
   end
 

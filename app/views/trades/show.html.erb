@@ -202,6 +202,43 @@
         </dl>
       <% end %>
 
+      <% active_support_requests = @trade.support_requests.where.not(status: 'closed').order(created_at: :desc) %>
+      <% if active_support_requests.any? %>
+        <%= render CardComponent.new do %>
+          <h3 class="text-base font-semibold text-orange-900 mb-3">🔔 Support Requests Active</h3>
+          <p class="text-sm text-orange-700 mb-3">
+            <%= pluralize(active_support_requests.count, "support request") %> for this trade
+          </p>
+          <div class="space-y-2">
+            <% active_support_requests.limit(3).each do |request| %>
+              <%= link_to request.subject, support_request_path(request), class: "block text-sm font-medium text-orange-800 hover:underline" %>
+            <% end %>
+            <% if active_support_requests.count > 3 %>
+              <p class="text-xs text-orange-600">+ <%= active_support_requests.count - 3 %> more</p>
+            <% end %>
+          </div>
+          <%= link_to "View All Support Requests", support_requests_path(trade_id: @trade.id), class: "btn-app-secondary w-full text-center mt-3" %>
+        <% end %>
+      <% end %>
+
+      <% if (@is_buyer || @is_seller) && !Trade::STATES_COMPLETED.include?(@trade.state) %>
+        <%= render CardComponent.new do %>
+          <h3 class="text-base font-semibold text-app-strong mb-3">Need Help?</h3>
+          <p class="text-sm text-app-muted mb-3">Having an issue with this trade? Our team is here to help.</p>
+          <%= link_to "Get Support",
+                      new_support_request_path(trade_id: @trade.id),
+                      class: "btn-app-secondary w-full text-center" %>
+        <% end %>
+      <% end %>
+
+      <% if @trade.dispute.present? %>
+        <%= render CardComponent.new do %>
+          <h3 class="text-base font-semibold text-red-900 mb-3">⚠️ Dispute Active</h3>
+          <p class="text-sm text-red-700 mb-3">This trade has a formal dispute requiring admin resolution.</p>
+          <%= link_to "View Dispute", madmin_dispute_path(@trade.dispute), target: "_blank", class: "btn-app-secondary w-full text-center" %>
+        <% end %>
+      <% end %>
+
       <%= render CardComponent.new do %>
         <h3 class="text-base font-semibold text-app-strong mb-3"><%= t("trades.show.sections.next_steps", default: "Next steps") %></h3>
         <% case @trade.state %>
@@ -451,7 +488,7 @@
             <p class="text-sm text-app-muted mb-4">Inspect the returned item.</p>
             <div class="flex gap-2">
               <%= button_to "Accept Return", accept_return_trade_path(@trade), method: :post, class: "btn-app-primary", data: { turbo_confirm: "Accept the return and issue refund?" } %>
-              <%= button_to "Reject Return", reject_return_trade_path(@trade), method: :post, class: "btn-app-secondary", data: { turbo_confirm: "Reject the return and open a dispute?" } %>
+              <%= link_to "Reject Return", reject_return_form_trade_path(@trade), class: "btn-app-secondary" %>
             </div>
           <% else %>
             <p class="text-sm text-app-muted">Seller is inspecting the return.</p>

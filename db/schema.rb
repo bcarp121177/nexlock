@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_22_213419) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_23_153318) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -49,6 +49,15 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_22_213419) do
     t.string "subdomain"
     t.datetime "updated_at", null: false
     t.index ["owner_id"], name: "index_accounts_on_owner_id"
+  end
+
+  create_table "action_mailbox_inbound_emails", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "message_checksum", null: false
+    t.string "message_id", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["message_id", "message_checksum"], name: "index_action_mailbox_inbound_emails_uniqueness", unique: true
   end
 
   create_table "action_text_embeds", force: :cascade do |t|
@@ -201,6 +210,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_22_213419) do
     t.string "payment_intent_id"
     t.string "payment_method_id"
     t.string "provider", default: "stripe", null: false
+    t.datetime "refunded_at"
     t.string "status", null: false
     t.string "stripe_checkout_session_id"
     t.bigint "trade_id", null: false
@@ -459,6 +469,44 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_22_213419) do
     t.index ["trade_id"], name: "index_shipments_on_trade_id"
   end
 
+  create_table "support_messages", force: :cascade do |t|
+    t.bigint "author_id"
+    t.string "author_type"
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.string "message_id"
+    t.string "sent_via", default: "web", null: false
+    t.bigint "support_request_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["author_type", "author_id"], name: "index_support_messages_on_author_type_and_author_id"
+    t.index ["message_id"], name: "index_support_messages_on_message_id"
+    t.index ["support_request_id"], name: "index_support_messages_on_support_request_id"
+    t.check_constraint "sent_via::text = ANY (ARRAY['web'::character varying, 'email'::character varying]::text[])", name: "support_messages_sent_via_values"
+  end
+
+  create_table "support_requests", force: :cascade do |t|
+    t.bigint "account_id"
+    t.datetime "closed_at"
+    t.bigint "closed_by_id"
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.bigint "opened_by_id"
+    t.string "request_type", default: "general", null: false
+    t.string "status", default: "open", null: false
+    t.string "subject", null: false
+    t.bigint "trade_id"
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_support_requests_on_account_id"
+    t.index ["closed_by_id"], name: "index_support_requests_on_closed_by_id"
+    t.index ["email"], name: "index_support_requests_on_email"
+    t.index ["opened_by_id"], name: "index_support_requests_on_opened_by_id"
+    t.index ["status"], name: "index_support_requests_on_status"
+    t.index ["trade_id"], name: "index_support_requests_on_trade_id"
+    t.check_constraint "email IS NOT NULL OR opened_by_id IS NOT NULL", name: "support_requests_contact_required"
+    t.check_constraint "request_type::text = ANY (ARRAY['general'::character varying, 'dispute'::character varying, 'question'::character varying]::text[])", name: "support_requests_request_type_values"
+    t.check_constraint "status::text = ANY (ARRAY['open'::character varying, 'responded'::character varying, 'closed'::character varying]::text[])", name: "support_requests_status_values"
+  end
+
   create_table "trade_documents", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "completed_at"
@@ -626,6 +674,11 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_22_213419) do
   add_foreign_key "payouts", "users", column: "seller_id"
   add_foreign_key "shipments", "accounts", on_delete: :cascade
   add_foreign_key "shipments", "trades", on_delete: :cascade
+  add_foreign_key "support_messages", "support_requests", on_delete: :cascade
+  add_foreign_key "support_requests", "accounts", on_delete: :cascade
+  add_foreign_key "support_requests", "trades", on_delete: :cascade
+  add_foreign_key "support_requests", "users", column: "closed_by_id", on_delete: :nullify
+  add_foreign_key "support_requests", "users", column: "opened_by_id", on_delete: :nullify
   add_foreign_key "trade_documents", "accounts", on_delete: :cascade
   add_foreign_key "trade_documents", "trades", on_delete: :cascade
   add_foreign_key "trades", "accounts", on_delete: :cascade
