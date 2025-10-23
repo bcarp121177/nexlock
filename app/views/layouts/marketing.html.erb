@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <title><%= content_for(:title) || "NexLock - Secure Peer-to-Peer Trade Escrow" %></title>
+    <%= render "head" %>
+  </head>
+
+  <body>
+    <%= yield %>
+  </body>
+</html>

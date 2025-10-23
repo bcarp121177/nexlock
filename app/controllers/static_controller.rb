@@ -1,4 +1,6 @@
 class StaticController < ApplicationController
+  layout "marketing", only: [:index]
+
   def index
   end
 
