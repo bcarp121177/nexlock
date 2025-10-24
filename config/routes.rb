@@ -28,6 +28,14 @@ Rails.application.routes.draw do
   # Public listing routes (no authentication required)
   get '/l/:token', to: 'listings#show', as: :public_listing
 
+  # Conversation routes
+  resources :conversations, only: [:index, :show, :create] do
+    resources :messages, only: [:create]
+  end
+
+  # Public conversation access via token (for anonymous buyers)
+  get '/c/:token', to: 'conversations#show', as: :public_conversation
+
   scope controller: :static do
     get :about
     get :terms

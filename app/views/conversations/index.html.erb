@@ -1,0 +1,76 @@
+<% page_title = "Messages" %>
+<% page_subtitle = "Manage your buyer-seller conversations" %>
+<% Current.meta_tags.set(title: page_title) %>
+
+<div class="space-y-8">
+  <%= render PageHeaderComponent.new(title: page_title, subtitle: page_subtitle) %>
+
+  <%= render CardComponent.new(class_name: "app-card-flush") do %>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-[color:var(--app-border-subtle)] text-left">
+        <thead class="bg-app-muted text-sm text-app-muted uppercase tracking-wide">
+          <tr>
+            <th scope="col" class="px-6 py-3 font-medium">Conversation</th>
+            <th scope="col" class="px-6 py-3 font-medium">Trade</th>
+            <th scope="col" class="px-6 py-3 font-medium">Last Message</th>
+            <th scope="col" class="px-6 py-3 font-medium">Status</th>
+            <th scope="col" class="px-6 py-3 font-medium"><span class="sr-only">Actions</span></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-[color:var(--app-border-subtle)] text-sm">
+          <% if @conversations.any? %>
+            <% @conversations.each do |conversation| %>
+              <% unread_count = conversation.unread_count_for(current_user) %>
+              <tr class="transition hover:bg-[color:var(--app-surface-muted)]">
+                <td class="px-6 py-4">
+                  <p class="font-medium text-app-strong">
+                    <%= conversation.buyer_user&.name || conversation.buyer_email %>
+                  </p>
+                  <p class="text-xs text-app-muted">
+                    <% if current_user == conversation.seller %>
+                      Buyer inquiry
+                    <% else %>
+                      With <%= conversation.trade.seller.name %>
+                    <% end %>
+                  </p>
+                </td>
+                <td class="px-6 py-4">
+                  <p class="font-medium text-app-strong"><%= conversation.trade.item&.name || "Untitled Trade" %></p>
+                  <p class="text-xs text-app-muted"><%= number_to_currency(conversation.trade.price) %></p>
+                </td>
+                <td class="px-6 py-4">
+                  <% last_message = conversation.messages.last %>
+                  <% if last_message %>
+                    <p class="text-app-strong line-clamp-1"><%= truncate(last_message.body, length: 60) %></p>
+                    <p class="text-xs text-app-muted"><%= time_ago_in_words(last_message.created_at) %> ago</p>
+                  <% else %>
+                    <p class="text-app-muted">No messages yet</p>
+                  <% end %>
+                </td>
+                <td class="px-6 py-4">
+                  <% if unread_count > 0 %>
+                    <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">
+                      <%= unread_count %> new
+                    </span>
+                  <% else %>
+                    <span class="text-app-muted">Read</span>
+                  <% end %>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <%= link_to "View", conversation_path(conversation), class: "text-sm font-medium text-app-accent hover:underline" %>
+                </td>
+              </tr>
+            <% end %>
+          <% else %>
+            <tr>
+              <td colspan="5" class="px-6 py-10 text-center text-app-muted">
+                <p class="text-base font-medium">No conversations yet</p>
+                <p class="mt-1 text-sm">Conversations will appear here when buyers message you about your listings.</p>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>

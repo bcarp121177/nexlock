@@ -1,0 +1,91 @@
+<% page_title = "Conversation" %>
+<% Current.meta_tags.set(title: page_title) %>
+
+<div class="space-y-8">
+  <%= render PageHeaderComponent.new(title: page_title, subtitle: "About #{@conversation.trade.item&.name || 'Trade'}") %>
+
+  <div class="grid gap-6 lg:grid-cols-3">
+    <!-- Main conversation thread (left side on desktop) -->
+    <div class="lg:col-span-2">
+      <%= render CardComponent.new do %>
+        <div class="space-y-6">
+          <!-- Messages -->
+          <div class="space-y-4 max-h-[600px] overflow-y-auto">
+            <% if @messages.any? %>
+              <% @messages.each do |message| %>
+                <% is_seller = message.sender_type == 'seller' %>
+                <% is_current_user = user_signed_in? && message.sender_user == current_user %>
+
+                <div class="<%= is_current_user ? 'flex justify-end' : '' %>">
+                  <div class="max-w-[80%]">
+                    <div class="flex items-baseline gap-2 mb-1">
+                      <span class="text-xs font-medium text-app-strong">
+                        <%= is_seller ? '🏪 Seller' : '🛒 Buyer' %>
+                      </span>
+                      <span class="text-xs text-app-muted">
+                        <%= time_ago_in_words(message.created_at) %> ago
+                      </span>
+                      <% if message.read_at %>
+                        <span class="text-xs text-app-muted">· Read</span>
+                      <% end %>
+                    </div>
+                    <div class="rounded-lg px-4 py-3 <%= is_current_user ? 'bg-blue-600 text-white' : 'bg-app-muted text-app-strong' %>">
+                      <%= simple_format(h(message.body), class: 'text-sm whitespace-pre-wrap') %>
+                    </div>
+                  </div>
+                </div>
+              <% end %>
+            <% else %>
+              <p class="text-center text-app-muted py-8">No messages yet. Start the conversation!</p>
+            <% end %>
+          </div>
+
+          <!-- Message form -->
+          <div class="border-t border-[color:var(--app-border-subtle)] pt-6">
+            <%= form_with model: @message, url: conversation_messages_path(@conversation, token: params[:token]), method: :post, class: "space-y-4" do |f| %>
+              <div>
+                <%= f.label :body, "Your message", class: "block text-sm font-medium text-app-strong mb-2" %>
+                <%= f.text_area :body, rows: 4, required: true, placeholder: "Type your message...", class: "block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+              </div>
+
+              <%= f.submit "Send Message", class: "btn-app-primary w-full sm:w-auto" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Trade details sidebar (right side on desktop) -->
+    <div class="lg:col-span-1">
+      <%= render CardComponent.new do %>
+        <h3 class="text-lg font-semibold text-app-strong mb-4">Trade Details</h3>
+
+        <div class="space-y-4">
+          <div>
+            <p class="text-xs text-app-muted uppercase tracking-wide mb-1">Item</p>
+            <p class="font-medium text-app-strong"><%= @conversation.trade.item&.name || "Untitled" %></p>
+          </div>
+
+          <div>
+            <p class="text-xs text-app-muted uppercase tracking-wide mb-1">Price</p>
+            <p class="font-medium text-app-strong"><%= number_to_currency(@conversation.trade.price) %></p>
+          </div>
+
+          <div>
+            <p class="text-xs text-app-muted uppercase tracking-wide mb-1">Seller</p>
+            <p class="font-medium text-app-strong"><%= @conversation.trade.seller.name %></p>
+          </div>
+
+          <div>
+            <p class="text-xs text-app-muted uppercase tracking-wide mb-1">Buyer</p>
+            <p class="font-medium text-app-strong"><%= @conversation.buyer_user&.name || @conversation.buyer_email %></p>
+          </div>
+
+          <div class="pt-4 border-t border-[color:var(--app-border-subtle)]">
+            <%= link_to "View Trade", trade_path(@conversation.trade), class: "btn-app-secondary w-full text-center" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

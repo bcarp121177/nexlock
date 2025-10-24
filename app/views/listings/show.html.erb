@@ -82,7 +82,7 @@
         <!-- Price Card -->
         <%= render CardComponent.new do %>
           <div class="text-center pb-4 border-b border-app-subtle">
-            <p class="text-sm text-app-muted mb-1">Price</p>
+            <p class="text-sm text-app-muted mb-1">Ask</p>
             <p class="text-3xl font-bold text-app-strong"><%= number_to_currency(@trade.price_cents / 100.0) %></p>
           </div>
 
@@ -109,29 +109,33 @@
           </div>
         <% end %>
 
-        <!-- Contact Seller -->
+        <!-- Message Seller -->
         <%= render CardComponent.new do %>
-          <h3 class="text-lg font-semibold text-app-strong mb-3">Interested?</h3>
-          <p class="text-sm text-app-muted mb-4">Contact the seller with any questions before purchasing.</p>
+          <h3 class="text-lg font-semibold text-app-strong mb-3">Message Seller</h3>
+          <p class="text-sm text-app-muted mb-4">Have questions? Send a message to the seller.</p>
 
-          <% if @trade.seller_contact_email.present? %>
-            <%= link_to "mailto:#{@trade.seller_contact_email}",
-                        class: "btn-app-primary w-full text-center inline-flex items-center justify-center gap-2" do %>
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              <span>Email Seller</span>
-            <% end %>
-            <p class="mt-3 text-xs text-center text-app-muted"><%= @trade.seller_contact_email %></p>
-          <% else %>
-            <p class="text-sm text-app-body">Contact the seller through the channel where you found this listing.</p>
+          <%= form_with model: Conversation.new, url: conversations_path, method: :post, class: "space-y-4", local: true do |f| %>
+            <%= f.hidden_field :trade_id, value: @trade.id %>
+
+            <div>
+              <%= f.label :buyer_email, "Your Email", class: "block text-sm font-medium text-app-strong mb-2" %>
+              <%= f.email_field :buyer_email, required: true, placeholder: "you@example.com",
+                  class: "w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" %>
+            </div>
+
+            <div>
+              <%= f.label :initial_message, "Message", class: "block text-sm font-medium text-app-strong mb-2" %>
+              <%= f.text_area :initial_message, rows: 4, required: true, placeholder: "Ask the seller a question...",
+                  class: "w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" %>
+            </div>
+
+            <%= f.submit "Send Message", class: "btn-app-primary w-full" %>
           <% end %>
         <% end %>
 
         <!-- Trust Badges -->
         <div class="text-center text-sm text-app-muted">
           <p class="mb-2">🔒 Secure & Protected</p>
-          <p>Your payment is held safely in escrow until you confirm receipt</p>
         </div>
       </div>
     </div>

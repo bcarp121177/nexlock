@@ -4,7 +4,7 @@ class TradesController < ApplicationController
   before_action :authenticate_user!
   before_action :ensure_account
   before_action :set_trades_scope, only: [:index]
-  before_action :set_trade, only: [:show, :attach_media, :send_to_buyer, :agree, :publish_listing, :unpublish_listing, :listing_preview, :listing_analytics, :fund, :ship, :mark_delivered, :confirm_receipt, :accept, :reject, :send_for_signature, :cancel_signature_request, :retry_signature, :signing_url, :mark_return_shipped, :mark_return_delivered, :confirm_return_receipt, :accept_return, :reject_return_form, :reject_return]
+  before_action :set_trade, only: [:show, :edit, :update, :attach_media, :send_to_buyer, :agree, :publish_listing, :unpublish_listing, :listing_preview, :listing_analytics, :fund, :ship, :mark_delivered, :confirm_receipt, :accept, :reject, :send_for_signature, :cancel_signature_request, :retry_signature, :signing_url, :mark_return_shipped, :mark_return_delivered, :confirm_return_receipt, :accept_return, :reject_return_form, :reject_return]
 
   def index
     @pagy, @trades = pagy(@trades_scope.ordered, limit: 25)
@@ -74,6 +74,49 @@ class TradesController < ApplicationController
     @invitation_sent = @trade.audit_logs.any? { |log| log.action == "invitation_sent" }
     @is_seller = current_user == @trade.seller
     @is_buyer = current_user == @trade.buyer
+  end
+
+  def edit
+    @price_input = format('%.2f', @trade.price) if @trade.price_cents.present?
+  end
+
+  def update
+    assign_form_attributes
+
+    price_cents = parse_price_to_cents(@price_input)
+
+    if price_cents.nil?
+      render :edit, status: :unprocessable_content
+      return
+    end
+
+    if trade_params[:buyer_email].present? && buyer_same_as_seller?(trade_params[:buyer_email])
+      @trade.errors.add(:buyer_email, t("trades.service.errors.same_party", default: "Buyer and seller cannot be the same user."))
+      render :edit, status: :unprocessable_content
+      return
+    end
+
+    # Update item attributes
+    if @trade.item
+      @trade.item.assign_attributes(item_params_hash)
+    end
+
+    # Update trade attributes
+    @trade.assign_attributes(
+      price_cents: price_cents,
+      buyer_email: trade_params[:buyer_email].presence,
+      fee_split: trade_params[:fee_split].presence || "buyer",
+      inspection_window_hours: trade_params[:inspection_window_hours].to_i,
+      return_shipping_paid_by: trade_params[:return_shipping_paid_by].presence || "buyer",
+      seller_contact_email: trade_params[:seller_contact_email].presence
+    )
+
+    if @trade.save
+      flash[:notice] = t("trades.update.success", default: "Trade updated successfully.")
+      redirect_to trade_path(@trade)
+    else
+      render :edit, status: :unprocessable_content
+    end
   end
 
   def attach_media

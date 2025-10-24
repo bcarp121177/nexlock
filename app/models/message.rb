@@ -37,7 +37,17 @@ class Message < ApplicationRecord
   end
 
   def send_notification
-    # Will implement notification delivery here
-    # NewMessageNotification.with(message: self).deliver(recipient)
+    # Determine the recipient based on sender type
+    recipient = sender_type == 'seller' ? conversation.buyer_user : conversation.seller
+
+    # Send notification to authenticated user if they exist
+    if recipient
+      NewMessageNotification.with(message: self, conversation: conversation).deliver(recipient)
+    end
+
+    # Also send email to anonymous buyer if they don't have an account
+    if sender_type == 'seller' && conversation.buyer_user.nil?
+      MessageMailer.new_message_anonymous(self).deliver_later
+    end
   end
 end

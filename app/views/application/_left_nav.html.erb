@@ -3,6 +3,15 @@
 <% if user_signed_in? %>
   <%= nav_link_to "Trades", trades_path %>
 
+  <% unread_messages_count = Conversation.for_user(current_user).sum { |c| c.unread_count_for(current_user) } %>
+  <% if unread_messages_count > 0 %>
+    <%= nav_link_to conversations_path do %>
+      Messages <span class="inline-flex items-center justify-center px-2 py-0.5 ml-2 text-xs font-medium rounded-full bg-blue-100 text-blue-800"><%= unread_messages_count %></span>
+    <% end %>
+  <% else %>
+    <%= nav_link_to "Messages", conversations_path %>
+  <% end %>
+
   <% open_support_count = current_account.support_requests.where.not(status: 'closed').count %>
   <% if open_support_count > 0 %>
     <%= nav_link_to support_requests_path do %>

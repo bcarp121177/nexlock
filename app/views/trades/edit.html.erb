@@ -1,0 +1,151 @@
+<% page_title = t("trades.edit.title", default: "Edit Trade") %>
+<% page_subtitle = t("trades.edit.subtitle", default: "Update trade details.") %>
+<% Current.meta_tags.set(title: page_title) %>
+
+<div class="space-y-8">
+  <%= render PageHeaderComponent.new(title: page_title, subtitle: page_subtitle) do |header| %>
+    <% header.actions do %>
+      <%= link_to t("trades.edit.back", default: "Back to trade"), trade_path(@trade), class: "btn-app-secondary" %>
+    <% end %>
+  <% end %>
+
+  <% if @trade.errors.any? %>
+    <div class="app-card app-card-outline border-app-strong bg-[color:var(--app-danger-soft-bg)] text-app-danger">
+      <h2 class="text-base font-semibold"><%= t("trades.form.errors.heading", default: "Please fix the following") %></h2>
+      <ul class="mt-2 list-disc list-inside text-sm">
+        <% @trade.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+        <% if @trade.item&.errors&.any? %>
+          <% @trade.item.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= render CardComponent.new do %>
+    <%= form_with model: @trade, url: trade_path(@trade), method: :patch, local: true, multipart: true do |form| %>
+      <div class="space-y-8">
+        <section class="space-y-4">
+          <h2 class="text-lg font-semibold text-app-strong"><%= t("trades.form.sections.contact", default: "Contact Information") %></h2>
+
+          <div>
+            <%= form.label :seller_contact_email, t("trades.form.labels.seller_contact_email", default: "Your contact email"), class: "block text-sm font-medium text-app-strong" %>
+            <%= form.email_field :seller_contact_email, class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+            <p class="mt-1 text-xs text-app-muted"><%= t("trades.form.hints.seller_contact_email", default: "Email for buyers to contact you with questions about this listing.") %></p>
+          </div>
+
+          <div>
+            <%= form.label :buyer_email, t("trades.form.labels.buyer_email", default: "Buyer email address (optional)"), class: "block text-sm font-medium text-app-strong" %>
+            <%= form.email_field :buyer_email, class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+            <p class="mt-1 text-xs text-app-muted"><%= t("trades.form.hints.buyer_email", default: "Required before sending for signature. Can be added later if publishing as a listing.") %></p>
+          </div>
+        </section>
+
+        <section class="space-y-4">
+          <h2 class="text-lg font-semibold text-app-strong"><%= t("trades.form.sections.item", default: "Item Details") %></h2>
+
+          <div>
+            <%= form.fields_for :item do |item_fields| %>
+              <div class="space-y-4">
+                <div>
+                  <%= item_fields.label :name, t("trades.form.labels.item_name", default: "Item name"), class: "block text-sm font-medium text-app-strong" %>
+                  <%= item_fields.text_field :name, required: true, placeholder: "e.g., Fender Stratocaster", class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+                </div>
+
+                <div>
+                  <%= item_fields.label :description, t("trades.form.labels.item_description", default: "Description"), class: "block text-sm font-medium text-app-strong" %>
+                  <%= item_fields.text_area :description, rows: 4, required: true, placeholder: t("trades.form.hints.item_description", default: "Describe the item, including any notable details."), class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+                </div>
+
+                <div class="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <%= item_fields.label :category, t("trades.form.labels.item_category", default: "Category"), class: "block text-sm font-medium text-app-strong" %>
+                    <%= item_fields.select :category, Item::CATEGORIES.map { |c| [c.titleize, c] }, {}, class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+                  </div>
+
+                  <div>
+                    <%= item_fields.label :condition, t("trades.form.labels.item_condition", default: "Condition"), class: "block text-sm font-medium text-app-strong" %>
+                    <%= item_fields.select :condition, Item::CONDITIONS.map { |c| [c.titleize, c] }, {}, class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+                  </div>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </section>
+
+        <section class="space-y-4">
+          <h2 class="text-lg font-semibold text-app-strong"><%= t("trades.form.sections.media", default: "Photos & Videos") %></h2>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <label for="trade_media_files" class="btn-app-secondary cursor-pointer inline-flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              </svg>
+              <span>Choose Files</span>
+            </label>
+            <%= form.file_field :media_files, multiple: true, direct_upload: true, accept: "image/*,video/*", class: "hidden", id: "trade_media_files" %>
+            <span id="file-count" class="text-sm text-app-muted">No files selected</span>
+          </div>
+          <p class="text-xs text-app-muted"><%= t("trades.form.hints.media", default: "Upload images or short videos to showcase the item. Recommended for listings.") %></p>
+
+          <script>
+            document.getElementById('trade_media_files').addEventListener('change', function(e) {
+              const fileCount = e.target.files.length;
+              const countElement = document.getElementById('file-count');
+              if (fileCount === 0) {
+                countElement.textContent = 'No files selected';
+              } else if (fileCount === 1) {
+                countElement.textContent = '1 file selected';
+              } else {
+                countElement.textContent = fileCount + ' files selected';
+              }
+            });
+          </script>
+        </section>
+
+        <section class="space-y-4">
+          <h2 class="text-lg font-semibold text-app-strong"><%= t("trades.form.sections.terms", default: "Trade Terms") %></h2>
+
+          <div class="grid gap-4 md:grid-cols-2">
+            <div>
+              <label class="block text-sm font-medium text-app-strong" for="trade_price_dollars"><%= t("trades.form.labels.price", default: "Price (USD)") %></label>
+              <input type="number" name="trade[price_dollars]" id="trade_price_dollars" step="0.01" min="20" max="15000" value="<%= @price_input.presence %>" placeholder="0.00" required class="mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" />
+              <p class="mt-1 text-xs text-app-muted"><%= t("trades.form.hints.price", default: "Between $20.00 and $15,000.00") %></p>
+            </div>
+
+            <div>
+              <%= form.label :inspection_window_hours, t("trades.form.labels.inspection", default: "Inspection window"), class: "block text-sm font-medium text-app-strong" %>
+              <%= form.select :inspection_window_hours, [[t("trades.form.options.hours", default: "%{hours} hours", hours: 24), 24], [t("trades.form.options.hours", default: "%{hours} hours", hours: 48), 48], [t("trades.form.options.hours", default: "%{hours} hours", hours: 72), 72], [t("trades.form.options.days", default: "%{days} days", days: 7), 168]], {}, class: "mt-1 block w-full rounded-md border border-app-subtle bg-app-card px-3 py-2 text-app-strong focus:border-app-focus focus:ring-app-focus" %>
+              <p class="mt-1 text-xs text-app-muted"><%= t("trades.form.hints.inspection", default: "How long the buyer has to inspect the item after delivery") %></p>
+            </div>
+          </div>
+
+          <% estimated_fee = number_to_currency(estimated_platform_fee(@price_input)) %>
+          <fieldset class="space-y-3">
+            <legend class="text-sm font-medium text-app-strong"><%= t("trades.form.labels.fee_split", default: "Who pays the platform fee?") %></legend>
+            <p class="text-xs text-app-muted"><%= t("trades.form.hints.fee_split", default: "Estimated platform fee: %{fee_percent}% (~%{fee_amount})", fee_percent: TradesHelper::PLATFORM_FEE_PERCENT, fee_amount: estimated_fee) %></p>
+
+            <div class="grid gap-3 md:grid-cols-3">
+              <% [["buyer", t("trades.form.fee_split.buyer", default: "Buyer pays")], ["seller", t("trades.form.fee_split.seller", default: "Seller pays")], ["split", t("trades.form.fee_split.split", default: "Split 50/50")]].each do |value, label| %>
+                <label class="flex cursor-pointer flex-col gap-1 rounded-lg border border-app-subtle bg-app-card p-3 text-sm font-medium text-app-strong hover:border-app-strong">
+                  <%= form.radio_button :fee_split, value, class: "mr-2" %>
+                  <span><%= label %></span>
+                </label>
+              <% end %>
+            </div>
+          </fieldset>
+        </section>
+
+        <div class="flex items-center justify-end gap-3">
+          <%= link_to t("trades.form.actions.cancel", default: "Cancel"), trade_path(@trade), class: "btn-app-secondary" %>
+          <button type="submit" class="btn-app-primary">
+            <%= t("trades.form.actions.update", default: "Save Changes") %>
+          </button>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+</div>

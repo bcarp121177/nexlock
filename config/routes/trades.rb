@@ -1,4 +1,4 @@
-resources :trades, only: [:index, :new, :create, :show] do
+resources :trades, only: [:index, :new, :create, :show, :edit, :update] do
   member do
     post :attach_media
     post :send_to_buyer

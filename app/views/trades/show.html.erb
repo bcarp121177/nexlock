@@ -4,6 +4,7 @@
 <div class="space-y-8">
   <%= render PageHeaderComponent.new(title: page_title, subtitle: t("trades.show.subtitle", default: "Track progress and manage actions for this trade.")) do |header| %>
     <% header.actions do %>
+      <%= link_to t("trades.show.edit", default: "Edit"), edit_trade_path(@trade), class: "btn-app-primary" %>
       <%= link_to t("trades.show.back", default: "Back to trades"), trades_path, class: "btn-app-secondary" %>
     <% end %>
   <% end %>
@@ -219,6 +220,39 @@
             <dd class="text-app-strong"><%= l(@trade.updated_at, format: :long) %></dd>
           </div>
         </dl>
+      <% end %>
+
+      <% trade_conversations = @trade.conversations.ordered.limit(5) %>
+      <% if trade_conversations.any? %>
+        <%= render CardComponent.new do %>
+          <h3 class="text-base font-semibold text-app-strong mb-3">💬 Messages</h3>
+          <p class="text-sm text-app-muted mb-3">
+            <%= pluralize(trade_conversations.count, "conversation") %> about this trade
+          </p>
+          <div class="space-y-2">
+            <% trade_conversations.each do |conversation| %>
+              <% unread_count = conversation.unread_count_for(current_user) %>
+              <%= link_to conversation_path(conversation), class: "block p-2 rounded hover:bg-app-muted transition" do %>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-medium text-app-strong">
+                    <%= conversation.buyer_user&.name || conversation.buyer_email %>
+                  </span>
+                  <% if unread_count > 0 %>
+                    <span class="inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                      <%= unread_count %>
+                    </span>
+                  <% end %>
+                </div>
+                <% if conversation.messages.last %>
+                  <p class="text-xs text-app-muted mt-1 line-clamp-1">
+                    <%= truncate(conversation.messages.last.body, length: 50) %>
+                  </p>
+                <% end %>
+              <% end %>
+            <% end %>
+          </div>
+          <%= link_to "View All Messages", conversations_path, class: "btn-app-secondary w-full text-center mt-3" %>
+        <% end %>
       <% end %>
 
       <% active_support_requests = @trade.support_requests.where.not(status: 'closed').order(created_at: :desc) %>
