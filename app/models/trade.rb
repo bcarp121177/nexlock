@@ -46,6 +46,7 @@ class Trade < ApplicationRecord
   has_many :document_signatures, through: :trade_documents
   has_many :evidences, dependent: :destroy
   has_many :support_requests, dependent: :destroy
+  has_many :conversations, dependent: :destroy
 
   has_many_attached :media
   has_one_attached :signed_agreement

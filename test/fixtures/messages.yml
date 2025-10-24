@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  conversation: one
+  sender_type: MyString
+  sender_user: one
+  sender_email: MyString
+  body: MyText
+  read_at: 2025-10-23 23:02:01
+
+two:
+  conversation: two
+  sender_type: MyString
+  sender_user: two
+  sender_email: MyString
+  body: MyText
+  read_at: 2025-10-23 23:02:01

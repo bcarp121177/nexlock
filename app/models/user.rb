@@ -22,6 +22,8 @@ class User < ApplicationRecord
   has_many :document_signatures, dependent: :nullify
   has_many :opened_support_requests, class_name: "SupportRequest", foreign_key: :opened_by_id, dependent: :nullify
   has_many :closed_support_requests, class_name: "SupportRequest", foreign_key: :closed_by_id, dependent: :nullify
+  has_many :conversations_as_seller, class_name: "Conversation", as: :seller, dependent: :nullify
+  has_many :conversations_as_buyer, class_name: "Conversation", foreign_key: :buyer_user_id, dependent: :nullify
 
   validates :avatar, resizable_image: true
   validates :name, presence: true

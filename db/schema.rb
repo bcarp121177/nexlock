@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_10_24_024045) do
+ActiveRecord::Schema[8.1].define(version: 2025_10_24_030201) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -201,6 +201,24 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_24_024045) do
     t.index ["owner_id", "owner_type"], name: "index_connected_accounts_on_owner_id_and_owner_type"
   end
 
+  create_table "conversations", force: :cascade do |t|
+    t.string "buyer_email", null: false
+    t.string "buyer_token", null: false
+    t.bigint "buyer_user_id"
+    t.datetime "created_at", null: false
+    t.bigint "seller_id", null: false
+    t.string "seller_type", null: false
+    t.string "status", default: "active", null: false
+    t.bigint "trade_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["buyer_email"], name: "index_conversations_on_buyer_email"
+    t.index ["buyer_token"], name: "index_conversations_on_buyer_token", unique: true
+    t.index ["buyer_user_id"], name: "index_conversations_on_buyer_user_id"
+    t.index ["seller_type", "seller_id"], name: "index_conversations_on_seller"
+    t.index ["status"], name: "index_conversations_on_status"
+    t.index ["trade_id"], name: "index_conversations_on_trade_id"
+  end
+
   create_table "disputes", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -299,6 +317,21 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_24_024045) do
     t.index ["account_id", "trade_id"], name: "index_items_on_account_id_and_trade_id"
     t.index ["account_id"], name: "index_items_on_account_id"
     t.index ["trade_id"], name: "index_items_on_trade_id"
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.text "body", null: false
+    t.bigint "conversation_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "read_at"
+    t.string "sender_email", null: false
+    t.string "sender_type", null: false
+    t.bigint "sender_user_id"
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id", "created_at"], name: "index_messages_on_conversation_id_and_created_at"
+    t.index ["conversation_id"], name: "index_messages_on_conversation_id"
+    t.index ["read_at"], name: "index_messages_on_read_at"
+    t.index ["sender_user_id"], name: "index_messages_on_sender_user_id"
   end
 
   create_table "noticed_events", force: :cascade do |t|
@@ -702,6 +735,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_24_024045) do
   add_foreign_key "audit_logs", "accounts", on_delete: :cascade
   add_foreign_key "audit_logs", "trades", on_delete: :cascade
   add_foreign_key "audit_logs", "users", column: "actor_id", on_delete: :nullify
+  add_foreign_key "conversations", "trades"
+  add_foreign_key "conversations", "users", column: "buyer_user_id"
   add_foreign_key "disputes", "accounts", on_delete: :cascade
   add_foreign_key "disputes", "trades", on_delete: :cascade
   add_foreign_key "disputes", "users", column: "opened_by_id", on_delete: :nullify
@@ -717,6 +752,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_10_24_024045) do
   add_foreign_key "evidences", "users", on_delete: :cascade
   add_foreign_key "items", "accounts", on_delete: :cascade
   add_foreign_key "items", "trades", on_delete: :cascade
+  add_foreign_key "messages", "conversations"
+  add_foreign_key "messages", "users", column: "sender_user_id"
   add_foreign_key "pay_charges", "pay_customers", column: "customer_id"
   add_foreign_key "pay_payment_methods", "pay_customers", column: "customer_id"
   add_foreign_key "pay_subscriptions", "pay_customers", column: "customer_id"
