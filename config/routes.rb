@@ -25,6 +25,9 @@ Rails.application.routes.draw do
     end
   end
 
+  # Public listing routes (no authentication required)
+  get '/l/:token', to: 'listings#show', as: :public_listing
+
   scope controller: :static do
     get :about
     get :terms

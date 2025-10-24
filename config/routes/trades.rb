@@ -3,6 +3,10 @@ resources :trades, only: [:index, :new, :create, :show] do
     post :attach_media
     post :send_to_buyer
     post :agree
+    post :publish_listing
+    post :unpublish_listing
+    get :listing_preview
+    get :listing_analytics
     post :send_for_signature
     post :cancel_signature_request
     post :retry_signature

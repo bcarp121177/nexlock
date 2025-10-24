@@ -22,6 +22,7 @@ gem "jbuilder", "~> 2.14"
 gem "aasm"
 gem "faraday", "~> 2.7"
 gem "prawn", "~> 2.5"
+gem "ahoy_matey"
 
 # Use Active Model has_secure_password [https://guides.rubyonrails.org/active_model_basics.html#securepassword]
 # gem "bcrypt", "~> 3.1.7"

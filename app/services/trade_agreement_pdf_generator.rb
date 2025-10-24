@@ -113,19 +113,26 @@ class TradeAgreementPdfGenerator
       end
       pdf.move_down 15
 
-      # Buyer Information
+      # Buyer Information - Collected via DocuSeal
       pdf.font "Helvetica", style: :bold, size: 11
       pdf.text "BUYER"
       pdf.move_down 5
-      pdf.font "Helvetica", size: 10
-      pdf.text "Name: #{trade.buyer_name || trade.buyer_email.split('@').first.titleize}"
+      pdf.font "Helvetica", size: 9
+      pdf.fill_color "999999"
+
+      # DocuSeal will collect buyer information during signing
+      pdf.text "Name: {{Buyer Name;role=Buyer;type=text;required=true}}"
       pdf.text "Email: #{trade.buyer_email}"
-      if trade.buyer_address_complete?
-        pdf.text "Address:"
-        pdf.indent(20) do
-          pdf.text format_address(:buyer, trade)
-        end
+      pdf.text "Phone: {{Buyer Phone;role=Buyer;type=phone}}"
+      pdf.move_down 5
+      pdf.text "Shipping Address:"
+      pdf.indent(20) do
+        pdf.text "{{Buyer Street;role=Buyer;type=text;required=true}}"
+        pdf.text "{{Buyer City;role=Buyer;type=text;required=true}}, {{Buyer State;role=Buyer;type=text;required=true}} {{Buyer ZIP;role=Buyer;type=text;required=true}}"
+        pdf.text "{{Buyer Country;role=Buyer;type=text;required=true}}"
       end
+
+      pdf.fill_color TEXT_COLOR
       pdf.move_down 20
     end
 
@@ -202,7 +209,7 @@ class TradeAgreementPdfGenerator
       pdf.move_down 5
       pdf.text "Date: {{Buyer Date;role=Buyer;type=date}}"
       pdf.move_down 5
-      pdf.text "Name: #{trade.buyer_name || trade.buyer_email.split('@').first.titleize}"
+      pdf.text "Name: {{Buyer Name;role=Buyer;type=text;readonly=true}}"
     end
 
     def add_footer(pdf, trade)

@@ -98,6 +98,48 @@ class TradeService
       end
     end
 
+    # Listing workflow methods
+    def publish_listing(trade)
+      return { success: false, error: "Trade cannot be published" } unless trade.may_publish_listing?
+
+      trade.publish_listing!
+
+      AuditLog.create!(
+        account: trade.account,
+        trade: trade,
+        actor: Current.user,
+        action: "listing_published",
+        metadata: {
+          listing_url: trade.listing_url,
+          timestamp: Time.current
+        }
+      )
+
+      { success: true, message: "Listing published successfully" }
+    rescue => e
+      Rails.logger.error "Error publishing listing: #{e.message}"
+      { success: false, error: e.message }
+    end
+
+    def unpublish_listing(trade)
+      return { success: false, error: "Trade cannot be unpublished" } unless trade.may_unpublish_listing?
+
+      trade.unpublish_listing!
+
+      AuditLog.create!(
+        account: trade.account,
+        trade: trade,
+        actor: Current.user,
+        action: "listing_unpublished",
+        metadata: { timestamp: Time.current }
+      )
+
+      { success: true, message: "Listing unpublished successfully" }
+    rescue => e
+      Rails.logger.error "Error unpublishing listing: #{e.message}"
+      { success: false, error: e.message }
+    end
+
     def mark_shipped(trade, carrier:, tracking_number:)
       return { success: false, error: I18n.t("trades.actions.errors.invalid_state", default: "Trade must be funded before shipping.") } unless trade.may_mark_shipped?
       return { success: false, error: I18n.t("trades.actions.errors.tracking_required", default: "Tracking number is required.") } if tracking_number.blank?

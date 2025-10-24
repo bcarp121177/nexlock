@@ -55,9 +55,11 @@ class Trade < ApplicationRecord
   validates :price_cents, presence: true, numericality: { greater_than_or_equal_to: 2000, less_than_or_equal_to: 1_500_000 }
   validates :inspection_window_hours, presence: true, numericality: { greater_than_or_equal_to: 24, less_than_or_equal_to: 168 }
   validates :fee_split, presence: true, inclusion: { in: %w[buyer seller split] }
-  validates :buyer_email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
+  validates :buyer_email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP },
+            if: -> { state.in?(%w[awaiting_seller_signature awaiting_buyer_signature signature_deadline_missed awaiting_funding funded shipped delivered_pending_confirmation inspection accepted released rejected return_in_transit return_delivered_pending_confirmation return_inspection returned refunded disputed resolved_release resolved_refund resolved_split]) }
   validates :return_shipping_paid_by, inclusion: { in: %w[seller buyer split platform] }
   validates :rejection_category, inclusion: { in: REJECTION_CATEGORIES }, allow_nil: true
+  validates :listing_status, inclusion: { in: %w[draft published accepted expired] }
   validates :account, :seller, presence: true
   validate :buyer_and_seller_are_different
   validate :cannot_edit_if_locked
@@ -70,9 +72,12 @@ class Trade < ApplicationRecord
   scope :ordered, -> { order(created_at: :desc) }
   scope :requiring_attention, -> { where(state: STATES_REQUIRING_ATTENTION) }
   scope :completed, -> { where(state: STATES_COMPLETED) }
+  scope :published_listings, -> { where(listing_status: 'published') }
+  scope :active_listings, -> { published_listings.where('listing_expires_at IS NULL OR listing_expires_at > ?', Time.current) }
 
   aasm column: :state do
     state :draft, initial: true
+    state :published
     state :awaiting_seller_signature
     state :awaiting_buyer_signature
     state :signature_deadline_missed
@@ -94,10 +99,23 @@ class Trade < ApplicationRecord
     state :resolved_refund
     state :resolved_split
 
-    event :send_for_signature do
+    event :publish_listing do
       transitions from: :draft,
+                  to: :published,
+                  guard: :can_publish?,
+                  after: :mark_published
+    end
+
+    event :unpublish_listing do
+      transitions from: :published,
+                  to: :draft,
+                  after: :mark_unpublished
+    end
+
+    event :send_for_signature do
+      transitions from: [:draft, :published],
                   to: :awaiting_seller_signature,
-                  guard: :can_send_for_signature?,
+                  guard: [:can_send_for_signature?, :buyer_info_complete?],
                   after: [:lock_for_editing, :create_signature_document]
     end
 
@@ -246,9 +264,7 @@ class Trade < ApplicationRecord
   end
 
   def can_send_for_signature?
-    item.present? &&
-      price_cents.present? &&
-      buyer_email.present?
+    item.present? && price_cents.present?
   end
 
   def seller_address_complete?
@@ -292,6 +308,45 @@ class Trade < ApplicationRecord
     [refund, 0].max
   end
 
+  # Listing-related methods
+  def can_publish?
+    draft? && item.present? && price_cents.present? && listing_status == 'draft'
+  end
+
+  def buyer_info_complete?
+    buyer_email.present? &&
+      buyer_name.present? &&
+      buyer_street1.present? &&
+      buyer_city.present? &&
+      buyer_state.present? &&
+      buyer_zip.present? &&
+      buyer_country.present?
+  end
+
+  def listing_url
+    return nil unless invitation_token.present?
+    host = ENV.fetch("APP_HOST", "localhost:3000")
+    Rails.application.routes.url_helpers.public_listing_url(invitation_token, host: host)
+  end
+
+  def unique_visitors_count
+    Ahoy::Visit.where(
+      visit_token: Ahoy::Event.where(name: 'listing_view')
+                               .where("properties->>'trade_id' = ?", id.to_s)
+                               .select(:visit_token)
+    ).distinct.count
+  end
+
+  def listing_views_count
+    Ahoy::Event.where(name: 'listing_view')
+               .where("properties->>'trade_id' = ?", id.to_s)
+               .count
+  end
+
+  def published?
+    listing_status == 'published'
+  end
+
   private
 
   def generate_invitation_token
@@ -333,6 +388,16 @@ class Trade < ApplicationRecord
       raise "Failed to create signature document: #{result[:error]}"
     end
     Rails.logger.info "Trade #{id} signature document created"
+  end
+
+  def mark_published
+    update_columns(published_at: Time.current, listing_status: 'published')
+    Rails.logger.info "Trade #{id} published as listing"
+  end
+
+  def mark_unpublished
+    update_columns(published_at: nil, listing_status: 'draft')
+    Rails.logger.info "Trade #{id} unpublished"
   end
 
   def record_seller_signature

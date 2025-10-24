@@ -1,0 +1,139 @@
+<% page_title = @trade.item.name %>
+<% Current.meta_tags.set(title: page_title) %>
+
+<div class="min-h-screen bg-app-bg">
+  <div class="max-w-5xl mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8 text-center">
+      <h1 class="text-3xl font-bold text-app-strong mb-2"><%= @trade.item.name %></h1>
+      <p class="text-app-muted">Protected Transaction via Nexlock Escrow</p>
+      <div class="mt-4 flex items-center justify-center gap-2 text-sm text-app-muted">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+        <span><%= pluralize(@trade.view_count, 'view') %></span>
+      </div>
+    </div>
+
+    <div class="grid gap-8 lg:grid-cols-3">
+      <!-- Main Content -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Item Photos/Media -->
+        <% if @trade.media.attached? %>
+          <%= render CardComponent.new do %>
+            <div class="grid gap-4">
+              <% @trade.media.each do |attachment| %>
+                <% if attachment.blob.image? %>
+                  <%= image_tag attachment, class: "w-full rounded-lg object-cover max-h-96" %>
+                <% elsif attachment.blob.video? %>
+                  <%= video_tag url_for(attachment), controls: true, class: "w-full rounded-lg max-h-96" %>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        <% end %>
+
+        <!-- Item Description -->
+        <%= render CardComponent.new do %>
+          <h2 class="text-lg font-semibold text-app-strong mb-4">Description</h2>
+          <p class="text-app-body whitespace-pre-line leading-relaxed"><%= @trade.item.description %></p>
+
+          <div class="mt-6 grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs font-medium text-app-muted uppercase tracking-wide">Category</p>
+              <p class="mt-1 text-app-strong"><%= @trade.item.category.titleize %></p>
+            </div>
+            <div>
+              <p class="text-xs font-medium text-app-muted uppercase tracking-wide">Condition</p>
+              <p class="mt-1 text-app-strong"><%= @trade.item.condition.titleize %></p>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Terms & Conditions -->
+        <%= render CardComponent.new do %>
+          <h2 class="text-lg font-semibold text-app-strong mb-4">Transaction Terms</h2>
+          <div class="space-y-3 text-sm text-app-body">
+            <div class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span><strong>Escrow Protection:</strong> Payment held securely until you confirm receipt</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span><strong>Inspection Window:</strong> <%= @trade.inspection_window_hours %> hours to inspect and accept or reject</span>
+            </div>
+            <div class="flex items-start gap-2">
+              <svg class="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span><strong>Return Shipping:</strong> Paid by <%= @trade.return_shipping_paid_by.humanize %> if rejected</span>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-6">
+        <!-- Price Card -->
+        <%= render CardComponent.new do %>
+          <div class="text-center pb-4 border-b border-app-subtle">
+            <p class="text-sm text-app-muted mb-1">Price</p>
+            <p class="text-3xl font-bold text-app-strong"><%= number_to_currency(@trade.price_cents / 100.0) %></p>
+          </div>
+
+          <div class="py-4 space-y-2 text-sm">
+            <div class="flex justify-between">
+              <span class="text-app-muted">Item Price</span>
+              <span class="font-medium text-app-strong"><%= number_to_currency(@trade.price_cents / 100.0) %></span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-app-muted">Platform Fee</span>
+              <span class="font-medium text-app-strong"><%= number_to_currency(@trade.platform_fee_cents / 100.0) %></span>
+            </div>
+            <div class="flex justify-between text-xs text-app-muted">
+              <span>Fee paid by:</span>
+              <span><%= @trade.fee_split.humanize %></span>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-app-subtle">
+            <div class="flex justify-between text-lg font-semibold">
+              <span>Total</span>
+              <span><%= number_to_currency((@trade.price_cents + (@trade.fee_split == 'buyer' ? @trade.platform_fee_cents : 0)) / 100.0) %></span>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Contact Seller -->
+        <%= render CardComponent.new do %>
+          <h3 class="text-lg font-semibold text-app-strong mb-3">Interested?</h3>
+          <p class="text-sm text-app-muted mb-4">Contact the seller with any questions before purchasing.</p>
+
+          <% if @trade.seller_contact_email.present? %>
+            <%= link_to "mailto:#{@trade.seller_contact_email}",
+                        class: "btn-app-primary w-full text-center inline-flex items-center justify-center gap-2" do %>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <span>Email Seller</span>
+            <% end %>
+            <p class="mt-3 text-xs text-center text-app-muted"><%= @trade.seller_contact_email %></p>
+          <% else %>
+            <p class="text-sm text-app-body">Contact the seller through the channel where you found this listing.</p>
+          <% end %>
+        <% end %>
+
+        <!-- Trust Badges -->
+        <div class="text-center text-sm text-app-muted">
+          <p class="mb-2">🔒 Secure & Protected</p>
+          <p>Your payment is held safely in escrow until you confirm receipt</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -4,14 +4,19 @@ class TradesController < ApplicationController
   before_action :authenticate_user!
   before_action :ensure_account
   before_action :set_trades_scope, only: [:index]
-  before_action :set_trade, only: [:show, :attach_media, :send_to_buyer, :agree, :fund, :ship, :mark_delivered, :confirm_receipt, :accept, :reject, :send_for_signature, :cancel_signature_request, :retry_signature, :signing_url, :mark_return_shipped, :mark_return_delivered, :confirm_return_receipt, :accept_return, :reject_return_form, :reject_return]
+  before_action :set_trade, only: [:show, :attach_media, :send_to_buyer, :agree, :publish_listing, :unpublish_listing, :listing_preview, :listing_analytics, :fund, :ship, :mark_delivered, :confirm_receipt, :accept, :reject, :send_for_signature, :cancel_signature_request, :retry_signature, :signing_url, :mark_return_shipped, :mark_return_delivered, :confirm_return_receipt, :accept_return, :reject_return_form, :reject_return]
 
   def index
     @pagy, @trades = pagy(@trades_scope.ordered, limit: 25)
   end
 
   def new
-    @trade = current_account.trades.new(inspection_window_hours: 48, fee_split: "buyer", currency: "USD")
+    @trade = current_account.trades.new(
+      inspection_window_hours: 48,
+      fee_split: "buyer",
+      currency: "USD",
+      seller_contact_email: current_user.email
+    )
     @trade.build_item
     @price_input = params[:price] || ""
   end
@@ -29,7 +34,7 @@ class TradesController < ApplicationController
       return
     end
 
-    if buyer_same_as_seller?(trade_params[:buyer_email])
+    if trade_params[:buyer_email].present? && buyer_same_as_seller?(trade_params[:buyer_email])
       @trade.errors.add(:buyer_email, t("trades.service.errors.same_party", default: "Buyer and seller cannot be the same user."))
       render :new, status: :unprocessable_content
       return
@@ -38,7 +43,7 @@ class TradesController < ApplicationController
     result = TradeService.create_trade(
       account: current_account,
       seller: current_user,
-      buyer_email: trade_params[:buyer_email],
+      buyer_email: trade_params[:buyer_email].presence,
       item_params: item_params_hash,
       trade_params: {
         price_cents: price_cents,
@@ -49,6 +54,11 @@ class TradesController < ApplicationController
     )
 
     if result[:trade]
+      # Attach media files if provided
+      if params[:trade][:media_files].present?
+        result[:trade].media.attach(params[:trade][:media_files].reject(&:blank?))
+      end
+
       flash[:notice] = t("trades.create.success", default: "Trade draft created.")
       redirect_to trade_path(result[:trade])
     else
@@ -100,6 +110,60 @@ class TradesController < ApplicationController
     else
       redirect_to trade_path(@trade), alert: result[:error]
     end
+  end
+
+  def publish_listing
+    unless current_user == @trade.seller
+      redirect_to trade_path(@trade), alert: "Only the seller can publish this listing."
+      return
+    end
+
+    result = TradeService.publish_listing(@trade)
+
+    if result[:success]
+      redirect_to trade_path(@trade), notice: "Listing published! Share the link with potential buyers."
+    else
+      redirect_to trade_path(@trade), alert: result[:error]
+    end
+  end
+
+  def unpublish_listing
+    unless current_user == @trade.seller
+      redirect_to trade_path(@trade), alert: "Only the seller can unpublish this listing."
+      return
+    end
+
+    result = TradeService.unpublish_listing(@trade)
+
+    if result[:success]
+      redirect_to trade_path(@trade), notice: "Listing unpublished."
+    else
+      redirect_to trade_path(@trade), alert: result[:error]
+    end
+  end
+
+  def listing_preview
+    unless current_user == @trade.seller
+      redirect_to trade_path(@trade), alert: "Only the seller can preview the listing."
+      return
+    end
+
+    # Preview what buyers will see
+    render "listings/show", layout: "application"
+  end
+
+  def listing_analytics
+    unless current_user == @trade.seller
+      redirect_to trade_path(@trade), alert: "Only the seller can view analytics."
+      return
+    end
+
+    @unique_visitors = @trade.unique_visitors_count
+    @total_views = @trade.listing_views_count
+    @recent_visits = Ahoy::Visit.joins(:events)
+      .where(ahoy_events: { name: 'listing_view', properties: { trade_id: @trade.id } })
+      .order(started_at: :desc)
+      .limit(10)
   end
 
   def fund
@@ -422,6 +486,7 @@ class TradesController < ApplicationController
   def trade_params
     params.require(:trade).permit(
       :buyer_email,
+      :seller_contact_email,
       :fee_split,
       :inspection_window_hours,
       :price_dollars,
